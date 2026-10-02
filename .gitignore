@@ -1,0 +1,9 @@
+node_modules/
+dist/
+bin/
+obj/
+.env
+.env.local
+.local/
+*.tsbuildinfo
+backend/AgentHub.Api/appsettings.Development.json
