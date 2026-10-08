@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -8,40 +9,61 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddHttpClient("external", client => client.Timeout = TimeSpan.FromSeconds(45));
 builder.Services.AddSingleton<WorkflowStore>();
+builder.Services.AddSingleton<FeatureAccess>();
 builder.Services.AddHostedService<WorkflowWorker>();
+builder.AddGoogleConnection();
 var app = builder.Build();
+app.UseAuthentication();
+app.MapGoogleConnection();
+app.MapGet("/api/billing", (FeatureAccess access) => access.Snapshot());
+app.MapPost("/api/billing/simulate-payment", (FeatureAccess access, HttpContext context) => {
+    if (context.Connection.RemoteIpAddress is not { } address || !System.Net.IPAddress.IsLoopback(address)) return Results.StatusCode(403);
+    access.ActivateSimulation();
+    return Results.Ok(access.Snapshot());
+});
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
-app.MapGet("/api/connections", (IConfiguration config) => new {
-    ai = !string.IsNullOrWhiteSpace(config["OpenAI:ApiKey"]) && !string.IsNullOrWhiteSpace(config["OpenAI:Model"]),
+app.MapGet("/api/connections", (IConfiguration config, HttpContext context, GoogleTokenStore google) => new {
+    googleConfigured = GoogleConnection.Configured(config),
+    ai = AiSettings.Read(config).Ready, aiProvider = AiSettings.Read(config).Provider,
     services = new[] {
-        new { id = "drive", name = "Google Drive", connected = false, detail = "OAuth belum diimplementasikan" },
-        new { id = "calendar", name = "Google Calendar", connected = false, detail = "OAuth belum diimplementasikan" },
+        new { id = "drive", name = "Google Drive", connected = google.HasScope(context, GoogleConnection.DriveScope), detail = "Membuat folder di My Drive" },
+        new { id = "calendar", name = "Google Calendar", connected = google.HasScope(context, GoogleConnection.CalendarScope), detail = "Membuat event di kalender utama" },
+        new { id = "meet", name = "Google Meet", connected = google.HasScope(context, GoogleConnection.CalendarScope), detail = "Tautan meeting melalui Google Calendar" },
         new { id = "discord", name = "Discord", connected = Webhook.IsValid(config["Discord:WebhookUrl"]), detail = "Webhook dikonfigurasi oleh pemilik server" }
     }
 });
-app.MapGet("/api/workflows", (WorkflowStore store) => store.Items.Values.OrderByDescending(w => w.CreatedAt).Select(w => w.Snapshot()));
-app.MapGet("/api/workflows/{id:guid}", (Guid id, WorkflowStore store) =>
-    store.Items.TryGetValue(id, out var w) ? Results.Ok(w.Snapshot()) : Results.NotFound());
+app.MapGet("/api/workflows", (WorkflowStore store, HttpContext context) => store.Items.Values.Where(w => w.Owner == context.User.FindFirstValue("orbit_google_connection")).OrderByDescending(w => w.CreatedAt).Select(w => w.Snapshot()));
+app.MapGet("/api/workflows/{id:guid}", (Guid id, WorkflowStore store, HttpContext context) =>
+    store.Items.TryGetValue(id, out var w) && w.Owner == context.User.FindFirstValue("orbit_google_connection") ? Results.Ok(w.Snapshot()) : Results.NotFound());
 
-app.MapPost("/api/workflows/plan", async (PlanRequest request, WorkflowStore store, IConfiguration config, IHttpClientFactory clients, CancellationToken ct) => {
+app.MapPost("/api/workflows/plan", async (PlanRequest request, WorkflowStore store, IConfiguration config, IHttpClientFactory clients, HttpContext context, GoogleTokenStore google, FeatureAccess access, CancellationToken ct) => {
     if (string.IsNullOrWhiteSpace(request.Prompt) || request.Prompt.Length > 2000)
         return Results.BadRequest(new { error = "Isi instruksi antara 1–2.000 karakter." });
     if (request.Mode is not ("demo" or "live")) return Results.BadRequest(new { error = "Mode tidak valid." });
-    var aiEnabled = !string.IsNullOrWhiteSpace(config["OpenAI:ApiKey"]) && !string.IsNullOrWhiteSpace(config["OpenAI:Model"]);
+    var settings = AiSettings.Read(config); if (settings.Error is not null) return Results.BadRequest(new { error = settings.Error }); var aiEnabled = settings.Ready;
     List<Step> steps;
     var source = "template";
     if (aiEnabled) {
         try {
             steps = await Planner.Create(request.Prompt, config, clients.CreateClient("external"), ct);
             source = "ai";
-        } catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidOperationException or TaskCanceledException) {
-            return Results.Problem(statusCode: 502, title: "Planner AI belum berhasil merespons. Periksa konfigurasi atau coba lagi.");
+        } catch (PlannerException ex) {
+            return Results.Problem(statusCode: 502, title: ex.Message);
+        } catch (TaskCanceledException) when (!ct.IsCancellationRequested) {
+            return Results.Problem(statusCode: 504, title: "Layanan AI tidak merespons dalam 45 detik. Coba lagi atau pilih model lain yang tersedia di akun.");
+        } catch (HttpRequestException ex) {
+            var message = ex.StatusCode is null
+                ? "Koneksi ke layanan AI gagal sebelum respons diterima. Periksa internet, DNS, proxy, atau koneksi TLS pada komputer backend."
+                : $"Layanan AI mengembalikan HTTP {(int)ex.StatusCode}. Periksa akses API dan konfigurasi provider.";
+            return Results.Problem(statusCode: 502, title: message);
+        } catch (Exception ex) when (ex is JsonException or InvalidOperationException or KeyNotFoundException or ArgumentException) {
+            return Results.Problem(statusCode: 502, title: "Respons AI tidak berisi rencana JSON yang valid atau lengkap. Coba instruksi lebih singkat atau model lain yang mendukung Structured Outputs.");
         }
     } else {
-        if (request.Mode == "live") return Results.BadRequest(new { error = "Mode live memerlukan konfigurasi OpenAI. Mode demo memakai template contoh." });
+        if (request.Mode == "live") return Results.BadRequest(new { error = "Pengiriman nyata memerlukan konfigurasi Gemini atau OpenAI. Uji tanpa AI memakai template contoh." });
         steps = [
             new("drive", "Buat folder proyek", "Contoh: folder Proyek AI Kelompok untuk menyimpan hasil kerja."),
             new("calendar", "Jadwalkan diskusi kelompok", "Contoh: jadwal belum ditetapkan. Mode demo tidak membuat event."),
@@ -50,14 +72,20 @@ app.MapPost("/api/workflows/plan", async (PlanRequest request, WorkflowStore sto
     }
     if (steps.Count is < 1 or > 5 || steps.Any(s => s.Agent is not ("drive" or "calendar" or "discord") || string.IsNullOrWhiteSpace(s.Title) || string.IsNullOrWhiteSpace(s.Detail)))
         return Results.BadRequest(new { error = "Rencana tidak valid. Coba instruksi yang lebih spesifik." });
-    if (request.Mode == "live" && (steps.Any(s => s.Agent != "discord") || !Webhook.IsValid(config["Discord:WebhookUrl"])))
-        return Results.BadRequest(new { error = "Live saat ini mendukung pengiriman pesan Discord saja, setelah webhook dikonfigurasi. Gunakan mode demo untuk Drive dan Calendar." });
-    var workflow = new Workflow(request.Prompt.Trim(), request.Mode, source, steps);
+    if (source == "ai" && PlanContract.Validate(steps) is string validation) return Results.BadRequest(new { error = validation });
+    if (request.Mode == "live") {
+        if (access.Blocks(steps)) return FeatureAccess.UpgradeRequired();
+        if (steps.Any(s => s.Agent == "discord") && !Webhook.IsValid(config["Discord:WebhookUrl"])) return Results.BadRequest(new { error = "Konfigurasi webhook Discord belum valid." });
+        if (steps.Any(s => s.Agent == "drive") && !google.HasScope(context, GoogleConnection.DriveScope)) return Results.BadRequest(new { error = "Hubungkan akun Google dan berikan izin Drive terlebih dahulu." });
+        if (steps.Any(s => s.Agent == "calendar") && !google.HasScope(context, GoogleConnection.CalendarScope)) return Results.BadRequest(new { error = "Hubungkan akun Google dan berikan izin Calendar terlebih dahulu." });
+    }
+    var workflow = new Workflow(request.Prompt.Trim(), request.Mode, source, steps) { Owner = context.User.FindFirstValue("orbit_google_connection") };
     store.Items[workflow.Id] = workflow;
     return Results.Ok(workflow.Snapshot());
 });
-app.MapPost("/api/workflows/{id:guid}/execute", (Guid id, WorkflowStore store) => {
-    if (!store.Items.TryGetValue(id, out var workflow)) return Results.NotFound();
+app.MapPost("/api/workflows/{id:guid}/execute", (Guid id, WorkflowStore store, HttpContext context, FeatureAccess access) => {
+    if (!store.Items.TryGetValue(id, out var workflow) || workflow.Owner != context.User.FindFirstValue("orbit_google_connection")) return Results.NotFound();
+    if (workflow.Mode == "live" && access.Blocks(workflow.Steps)) return FeatureAccess.UpgradeRequired();
     lock (workflow.Sync) {
         if (workflow.Status != "planned") return Results.Conflict(new { error = "Rencana ini sudah dijalankan. Lihat status pekerjaan." });
         workflow.Status = "queued";
@@ -76,9 +104,17 @@ sealed class Step(string agent, string title, string detail) {
     public string Detail { get; } = detail;
     public string Status { get; set; } = "pending";
     public string? Result { get; set; }
+    public string Name { get; init; } = "";
+    public string Start { get; init; } = "";
+    public string End { get; init; } = "";
+    public bool IncludeLinks { get; init; }
+    public bool CreateMeet { get; init; }
+    public string? MeetUrl { get; set; }
+    public string? ResultUrl { get; set; }
 }
 sealed class Workflow(string prompt, string mode, string source, List<Step> steps) {
     public object Sync { get; } = new();
+    public string? Owner { get; init; }
     public Guid Id { get; } = Guid.NewGuid();
     public string Prompt { get; } = prompt;
     public string Mode { get; } = mode;
@@ -87,7 +123,7 @@ sealed class Workflow(string prompt, string mode, string source, List<Step> step
     public string Status { get; set; } = "planned";
     public List<Step> Steps { get; } = steps;
     public object Snapshot() { lock (Sync) return new { Id, Prompt, Mode, Source, CreatedAt, Status,
-        Steps = Steps.Select(s => new { s.Id, s.Agent, s.Title, s.Detail, s.Status, s.Result }).ToArray() }; }
+        Steps = Steps.Select(s => new { s.Id, s.Agent, s.Title, s.Detail, s.Status, s.Result, s.Name, s.Start, s.End, s.IncludeLinks, s.CreateMeet, s.MeetUrl, s.ResultUrl }).ToArray() }; }
 }
 sealed class WorkflowStore {
     public ConcurrentDictionary<Guid, Workflow> Items { get; } = new();
@@ -97,7 +133,7 @@ static class Webhook {
     public static bool IsValid(string? value) => Uri.TryCreate(value, UriKind.Absolute, out var uri)
         && uri.Scheme == "https" && uri.Host == "discord.com" && uri.AbsolutePath.StartsWith("/api/webhooks/");
 }
-sealed class WorkflowWorker(WorkflowStore store, IHttpClientFactory clients, IConfiguration config) : BackgroundService {
+sealed class WorkflowWorker(WorkflowStore store, IHttpClientFactory clients, IConfiguration config, GoogleTokenStore google, FeatureAccess access) : BackgroundService {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
         await foreach (var id in store.Queue.Reader.ReadAllAsync(stoppingToken)) {
             var workflow = store.Items[id];
@@ -109,21 +145,28 @@ sealed class WorkflowWorker(WorkflowStore store, IHttpClientFactory clients, ICo
                     if (workflow.Mode == "demo") {
                         await Task.Delay(900, stoppingToken);
                         result = "Simulasi selesai. Tidak ada data yang dibuat atau pesan yang dikirim ke layanan.";
+                    } else if (step.Agent is "drive" or "calendar") {
+                        if (access.Blocks([step])) throw new ActionFailure("Integrasi Google memerlukan Orbit Pro.");
+                        var output = await GoogleActions.Execute(step, workflow.Owner, google, clients.CreateClient("external"), stoppingToken);
+                        result = output.Message;
+                        lock (workflow.Sync) { step.ResultUrl = output.Url; step.MeetUrl = output.MeetUrl; }
                     } else {
                         var url = config["Discord:WebhookUrl"];
                         if (step.Agent != "discord" || !Webhook.IsValid(url)) throw new InvalidOperationException();
-                        if (step.Detail.Length > 2000) throw new InvalidOperationException();
+                        var content = GoogleActions.DiscordContent(step, workflow.Steps);
+                        if (content.Length > 2000) throw new ActionFailure("Pesan beserta tautan melebihi batas Discord. Hasil Google tetap tersedia pada langkah sebelumnya.");
                         using var response = await clients.CreateClient("external").PostAsJsonAsync(url!.Split('?')[0] + "?wait=true", new {
-                            content = step.Detail, allowed_mentions = new { parse = Array.Empty<string>() }
+                            content, allowed_mentions = new { parse = Array.Empty<string>() }
                         }, stoppingToken);
                         response.EnsureSuccessStatusCode();
                         result = "Discord mengonfirmasi pesan berhasil dibuat.";
                     }
                     lock (workflow.Sync) { step.Status = "completed"; step.Result = result; }
-                } catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException) {
+                } catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException or ActionFailure or JsonException or KeyNotFoundException) {
                     lock (workflow.Sync) {
                         step.Status = "failed";
-                        step.Result = "Tidak dapat mengonfirmasi hasil. Periksa layanan sebelum mencoba ulang agar tidak membuat pesan ganda.";
+                        if (ex is ActionFailure action) step.ResultUrl = action.ResultUrl;
+                        step.Result = ex is ActionFailure ? ex.Message : "Tidak dapat mengonfirmasi hasil. Periksa layanan sebelum mencoba ulang agar tidak membuat pesan ganda.";
                         foreach (var remaining in workflow.Steps.Where(s => s.Status == "pending")) remaining.Status = "skipped";
                         workflow.Status = "failed";
                     }
@@ -136,20 +179,13 @@ sealed class WorkflowWorker(WorkflowStore store, IHttpClientFactory clients, ICo
 }
 static class Planner {
     public static async Task<List<Step>> Create(string prompt, IConfiguration config, HttpClient client, CancellationToken ct) {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/responses");
+        var settings = AiSettings.Read(config); if (settings.Provider == "Gemini") return await GeminiPlanner.Create(prompt, settings, client, ct); using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/responses");
         request.Headers.Authorization = new("Bearer", config["OpenAI:ApiKey"]);
         request.Content = JsonContent.Create(new {
             model = config["OpenAI:Model"], store = false,
-            instructions = "Susun rencana singkat bahasa Indonesia sesuai instruksi pengguna. Hanya tindakan drive (buat folder), calendar (buat event), discord (kirim pesan). Maksimal 5 langkah. Jangan menambahkan tindakan yang tidak diminta. Detail discord harus berisi teks pesan lengkap yang akan dikirim. Jangan mengklaim tindakan sudah dilakukan. Jangan mengarang tanggal, tautan, atau ID hasil. Jika informasi kurang, jelaskan dalam detail. Untuk permintaan tidak didukung, kembalikan steps kosong.",
+            instructions = PlanContract.Instructions,
             input = prompt,
-            text = new { format = new { type = "json_schema", name = "workflow_plan", strict = true, schema = new {
-                type = "object", properties = new { steps = new { type = "array", items = new {
-                    type = "object", properties = new {
-                        agent = new { type = "string", @enum = new[] { "drive", "calendar", "discord" } },
-                        title = new { type = "string" }, detail = new { type = "string" }
-                    }, required = new[] { "agent", "title", "detail" }, additionalProperties = false
-                } } }, required = new[] { "steps" }, additionalProperties = false
-            } } }
+            text = new { format = new { type = "json_schema", name = "workflow_plan", strict = true, schema = PlanContract.Schema } }
         });
         using var response = await client.SendAsync(request, ct);
         response.EnsureSuccessStatusCode();
@@ -158,8 +194,6 @@ static class Planner {
             .Where(o => o.TryGetProperty("type", out var type) && type.GetString() == "message")
             .SelectMany(o => o.GetProperty("content").EnumerateArray())
             .First(c => c.GetProperty("type").GetString() == "output_text").GetProperty("text").GetString();
-        using var plan = JsonDocument.Parse(text!);
-        return plan.RootElement.GetProperty("steps").EnumerateArray().Select(s => new Step(
-            s.GetProperty("agent").GetString()!, s.GetProperty("title").GetString()!, s.GetProperty("detail").GetString()!)).ToList();
+        return PlanContract.Parse(text!);
     }
 }

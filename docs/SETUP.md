@@ -1,5 +1,7 @@
 # Kebutuhan untuk mengaktifkan Orbit
 
+Untuk menggunakan key Google AI Studio, ikuti [setup Gemini](GEMINI.md). OpenAI di bawah adalah alternatif; key kedua layanan tidak dapat dipertukarkan.
+
 ## Yang sudah bisa dipakai
 
 - Buat proyek dengan deskripsi dan tenggat.
@@ -63,11 +65,11 @@ Siapkan di Google Cloud project milik tim:
 4. Buat OAuth client bertipe **Web application**.
 5. Simpan client ID dan client secret secara privat.
 
-**Kode OAuth belum diimplementasikan.** Redirect URI final akan ditetapkan saat endpoint callback dibuat; harus sama persis antara backend dan Google Cloud. Jangan menganggap pengisian credentials saja sudah mengaktifkan Drive/Calendar.
+Ikuti [panduan koneksi Google](GOOGLE.md). Callback: `http://127.0.0.1:5080/api/google/callback`. Setelah mengisi credentials, restart backend dan pilih Hubungkan Google untuk memberikan izin. Workflow dapat membuat folder dan acara setelah rencana disetujui.
 
 Untuk pengembangan, utamakan akun pengujian yang bisa mengizinkan aplikasi pihak ketiga. Akun kampus dapat dibatasi oleh admin institusi. Saat memakai mode testing, siapkan kemungkinan diminta login ulang sebelum presentasi.
 
-Scope direncanakan sesempit mungkin: `drive.file` untuk file yang digunakan bersama aplikasi; akses event pada kalender yang dipilih untuk Calendar. Implementasi harus menangani state OAuth, refresh token, enkripsi token, dan pemisahan token per pengguna.
+Scope: `drive.file` dan `calendar.events.owned`. OAuth memakai state/correlation serta PKCE, dengan token terpisah per koneksi browser di memori server. Refresh dan penyimpanan token permanen belum tersedia; hubungkan ulang setelah restart atau kedaluwarsa.
 
 Referensi: [Google OAuth untuk aplikasi web](https://developers.google.com/identity/protocols/oauth2/web-server).
 
