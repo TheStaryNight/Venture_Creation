@@ -7,3 +7,5 @@ obj/
 .local/
 *.tsbuildinfo
 backend/AgentHub.Api/appsettings.Development.json
+
+backend/AgentHub.Api/appsettings.Local.json

@@ -3,8 +3,9 @@ using System.Text.Json;
 
 static class GoogleActions {
     public static async Task<(string Message, string Url, string? MeetUrl)> Execute(Step step, string? connectionId, GoogleTokenStore store, HttpClient client, CancellationToken ct) {
+        if (connectionId is not null) await store.Refresh(connectionId, client, ct);
         var scope = step.Agent == "drive" ? GoogleConnection.DriveScope : GoogleConnection.CalendarScope;
-        if (connectionId is null || !store.Items.TryGetValue(connectionId, out var token) || token.ExpiresAt <= DateTimeOffset.UtcNow || !token.Scopes.Contains(scope))
+        if (connectionId is null || !store.TryGet(connectionId, out var token) || token.ExpiresAt <= DateTimeOffset.UtcNow || !token.Scopes.Contains(scope))
             throw new ActionFailure("Koneksi Google kedaluwarsa atau izin belum diberikan. Hubungkan Google lagi, lalu buat rencana baru.");
         using var request = new HttpRequestMessage(HttpMethod.Post, step.Agent == "drive"
             ? "https://www.googleapis.com/drive/v3/files?fields=id"

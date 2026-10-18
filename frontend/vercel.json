@@ -1,0 +1,22 @@
+{
+    "outputDirectory":  "dist",
+    "buildCommand":  "npm run build",
+    "rewrites":  [
+                     {
+                         "destination":  "https://venturecreation-production.up.railway.app/api/:path*",
+                         "source":  "/api/:path*"
+                     }
+                 ],
+    "headers":  [
+                    {
+                        "headers":  [
+                                        {
+                                            "key":  "Cache-Control",
+                                            "value":  "private, no-store"
+                                        }
+                                    ],
+                        "source":  "/api/:path*"
+                    }
+                ],
+    "framework":  "vite"
+}

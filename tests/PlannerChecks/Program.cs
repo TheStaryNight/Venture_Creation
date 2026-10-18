@@ -113,7 +113,21 @@ Check(deniedWorkflow.Status == "failed" && deniedHttp.Requests == 0);
 var manual = new FeatureAccess(Config(new()), new TestEnvironment { EnvironmentName = "Production" });
 Check(!manual.Pro); manual.ActivateSimulation(); manual.ActivateSimulation();
 Check(manual.Pro && manual.SimulationActive && !manual.Blocks([folder, calendar]));
+var persisted = new Workflow("Persist test", "live", "ai", [folder, calendar]) { Owner = "google:test", Status = "queued" };
+var restored = JsonSerializer.Deserialize<Workflow>(JsonSerializer.Serialize(persisted.Snapshot(), OrbitDatabase.Json), OrbitDatabase.Json)!;
+Check(restored.Id == persisted.Id && restored.CreatedAt == persisted.CreatedAt && restored.Status == "queued");
+Check(restored.Steps[0].Id == folder.Id && restored.Steps[0].Name == folder.Name);
+Check(WorkspaceEndpoints.Valid(JsonSerializer.Deserialize<JsonElement>("{\"workspace\":\"Orbit\",\"draft\":\"\",\"projects\":[]}")));
+Check(!WorkspaceEndpoints.Valid(JsonSerializer.Deserialize<JsonElement>("{\"workspace\":123,\"draft\":\"\",\"projects\":[]}")));
 Console.WriteLine("PASS: manual simulated Pro activation, planner/schema, Google payloads, timestamp validation, token isolation/expiry/scopes, real-result link forwarding, queued execution, failure stop, Meet polling/link forwarding and Pro gates (mock HTTP).");
+try { await DatabaseChecks.Run(); }
+catch (Exception e) {
+    Console.Error.WriteLine($"FAIL: database integration checks ({e.GetType().Name}).");
+    if (e is Npgsql.PostgresException postgres) Console.Error.WriteLine($"PostgreSQL SQLSTATE: {postgres.SqlState}");
+    if (e is Npgsql.NpgsqlException)
+        Console.Error.WriteLine("Check database connectivity, credentials and the trusted SSL root certificate. Secret connection details are omitted.");
+    Environment.ExitCode = 1;
+}
 static async Task WaitDone(Workflow w) {
     var deadline = DateTime.UtcNow.AddSeconds(5);
     while (DateTime.UtcNow < deadline) { lock(w.Sync) { if (w.Status is "completed" or "failed") return; } await Task.Delay(10); }
