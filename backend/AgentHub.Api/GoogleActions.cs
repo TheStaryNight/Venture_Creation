@@ -3,6 +3,10 @@ using System.Text.Json;
 
 static class GoogleActions {
     public static async Task<(string Message, string Url, string? MeetUrl)> Execute(Step step, string? connectionId, GoogleTokenStore store, HttpClient client, CancellationToken ct) {
+        if (step.Agent == "drive") {
+            if (step.Action is "use_existing_folder" or "list_folder_files") return await DriveFolders.Execute(step, connectionId, store, client, ct);
+            if (step.Action != "create_folder") throw new ActionFailure("Rencana Drive lama harus disusun ulang agar tindakan jelas.");
+        }
         if (connectionId is not null) await store.Refresh(connectionId, client, ct);
         var scope = step.Agent == "drive" ? GoogleConnection.DriveScope : GoogleConnection.CalendarScope;
         if (connectionId is null || !store.TryGet(connectionId, out var token) || token.ExpiresAt <= DateTimeOffset.UtcNow || !token.Scopes.Contains(scope))
@@ -69,6 +73,6 @@ static class GoogleActions {
         return null;
     }
     public static string DiscordContent(Step step, IEnumerable<Step> prior) => step.Detail + (step.IncludeLinks
-        ? "\n\n" + string.Join("\n", prior.Where(s => s.Status == "completed" && s.ResultUrl is not null).SelectMany(s => new[] { s.ResultUrl, s.MeetUrl }.Where(url => url is not null))) : "");
+        ? "\n\n" + string.Join("\n", prior.Where(s => s.Status == "completed" && s.ResultUrl is not null).SelectMany(s => new[] { s.Action == "list_folder_files" ? s.Result : null, s.ResultUrl, s.MeetUrl }.Where(value => value is not null))) : "");
 }
 sealed class ActionFailure(string message, string? resultUrl = null) : Exception(message) { public string? ResultUrl { get; } = resultUrl; }

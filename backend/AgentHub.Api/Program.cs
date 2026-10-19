@@ -26,6 +26,7 @@ app.UseAuthentication();
 app.UseWorkspaceAccess(database);
 app.MapWorkspaceEndpoints(database);
 app.MapGoogleConnection();
+app.MapDriveFolders();
 app.MapGet("/api/billing", (FeatureAccess access, HttpContext context) => database.Enabled ? database.Billing(context.User.FindFirstValue("orbit_google_connection")!) : access.Snapshot());
 app.MapPost("/api/billing/simulate-payment", (FeatureAccess access, HttpContext context) => {
     if (database.Enabled || app.Configuration.GetValue<bool>("Deployment:Public")) return Results.StatusCode(403);
@@ -78,7 +79,7 @@ app.MapPost("/api/workflows/plan", async (PlanRequest request, WorkflowStore sto
     } else {
         if (request.Mode == "live") return Results.BadRequest(new { error = "Pengiriman nyata memerlukan konfigurasi Gemini atau OpenAI. Uji tanpa AI memakai template contoh." });
         steps = [
-            new("drive", "Buat folder proyek", "Contoh: folder Proyek AI Kelompok untuk menyimpan hasil kerja."),
+            new("drive", "Buat folder proyek", "Contoh: folder Proyek AI Kelompok untuk menyimpan hasil kerja.") { Action = "create_folder" },
             new("calendar", "Jadwalkan diskusi kelompok", "Contoh: jadwal belum ditetapkan. Mode demo tidak membuat event."),
             new("discord", "Bagikan rangkuman", "Contoh: kirim rangkuman persiapan proyek ke channel kelompok.")
         ];
@@ -97,11 +98,15 @@ app.MapPost("/api/workflows/plan", async (PlanRequest request, WorkflowStore sto
     store.Items[workflow.Id] = workflow;
     return Results.Ok(workflow.Snapshot());
 });
-app.MapPost("/api/workflows/{id:guid}/execute", (Guid id, WorkflowStore store, HttpContext context, FeatureAccess access) => {
+app.MapPost("/api/workflows/{id:guid}/execute", (Guid id, ExecuteRequest request, WorkflowStore store, HttpContext context, FeatureAccess access) => {
     if (!store.Items.TryGetValue(id, out var workflow) || workflow.Owner != context.User.FindFirstValue("orbit_google_connection")) return Results.NotFound();
     if (workflow.Mode == "live" && access.Blocks(workflow.Steps, workflow.Owner)) return FeatureAccess.UpgradeRequired();
     lock (workflow.Sync) {
         if (workflow.Status != "planned") return Results.Conflict(new { error = "Rencana ini sudah dijalankan. Lihat status pekerjaan." });
+        if (workflow.Mode == "live" && workflow.Steps.Any(s => s.Agent == "drive" && s.Action == "create_folder") && !request.ConfirmNewFolder)
+            return Results.BadRequest(new { error = "Konfirmasi pembuatan folder baru. Untuk folder yang sudah ada, susun ulang instruksi dengan gunakan folder lama." });
+        if (workflow.Steps.Any(s => s.Agent == "drive" && (s.Action is not ("create_folder" or "use_existing_folder" or "list_folder_files") || (s.Action != "create_folder" && string.IsNullOrEmpty(s.FolderId)))))
+            return Results.BadRequest(new { error = "Pilih folder untuk setiap langkah Drive yang memakai folder lama. Rencana lama tanpa jenis tindakan harus disusun ulang." });
         workflow.Status = "queued";
         try {
             if (!database.QueueWorkflow(workflow)) { workflow.Status = "planned"; return FeatureAccess.UpgradeRequired(); }
@@ -114,6 +119,7 @@ app.MapFallbackToFile("index.html");
 app.Run();
 
 record PlanRequest(string Prompt, string Mode);
+record ExecuteRequest(bool ConfirmNewFolder = false);
 sealed class Step(string agent, string title, string detail) {
     public Guid Id { get; init; } = Guid.NewGuid();
     public string Agent { get; } = agent;
@@ -122,6 +128,9 @@ sealed class Step(string agent, string title, string detail) {
     public string Status { get; set; } = "pending";
     public string? Result { get; set; }
     public string Name { get; init; } = "";
+    public string Action { get; init; } = "";
+    public string FolderId { get; set; } = "";
+    public string FolderName { get; set; } = "";
     public string Start { get; init; } = "";
     public string End { get; init; } = "";
     public bool IncludeLinks { get; init; }
@@ -140,7 +149,7 @@ sealed class Workflow(string prompt, string mode, string source, List<Step> step
     public string Status { get; set; } = "planned";
     public List<Step> Steps { get; } = steps;
     public object Snapshot() { lock (Sync) return new { Id, Prompt, Mode, Source, CreatedAt, Status,
-        Steps = Steps.Select(s => new { s.Id, s.Agent, s.Title, s.Detail, s.Status, s.Result, s.Name, s.Start, s.End, s.IncludeLinks, s.CreateMeet, s.MeetUrl, s.ResultUrl }).ToArray() }; }
+        Steps = Steps.Select(s => new { s.Id, s.Agent, s.Title, s.Detail, s.Status, s.Result, s.Name, s.Action, s.FolderId, s.FolderName, s.Start, s.End, s.IncludeLinks, s.CreateMeet, s.MeetUrl, s.ResultUrl }).ToArray() }; }
 }
 sealed class WorkflowStore(OrbitDatabase? database = null) {
     public void Persist(Workflow workflow) => database?.SaveWorkflow(workflow);

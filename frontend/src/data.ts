@@ -1,5 +1,5 @@
 import { useState } from 'react';
-export type Step = { id: string; agent: string; title: string; detail: string; status: string; result: string | null; name: string; start: string; end: string; includeLinks: boolean; createMeet: boolean; meetUrl: string | null; resultUrl: string | null };
+export type Step = { id: string; agent: string; title: string; detail: string; status: string; result: string | null; name: string; action: string; folderId: string; folderName: string; start: string; end: string; includeLinks: boolean; createMeet: boolean; meetUrl: string | null; resultUrl: string | null };
 export type Workflow = { id: string; prompt: string; mode: string; source: string; createdAt: string; status: string; steps: Step[] };
 export type Connection = { id: string; name: string; connected: boolean };
 export type Project = { id: string; name: string; description: string; deadline: string; tasks: { id: string; title: string; done: boolean }[]; draft: string };

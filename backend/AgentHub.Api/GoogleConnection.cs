@@ -10,6 +10,7 @@ static class GoogleConnection {
     public const string Callback = "http://127.0.0.1:5080/api/google/callback";
     public static string Frontend(IConfiguration config) => (config["Deployment:FrontendUrl"] ?? "http://127.0.0.1:5173").TrimEnd('/') + "/";
     public const string DriveScope = "https://www.googleapis.com/auth/drive.file";
+    public const string DriveMetadataScope = "https://www.googleapis.com/auth/drive.metadata.readonly";
     public const string CalendarScope = "https://www.googleapis.com/auth/calendar.events.owned";
     public static bool Configured(IConfiguration config) => !string.IsNullOrWhiteSpace(config["Google:ClientId"]) && !string.IsNullOrWhiteSpace(config["Google:ClientSecret"]);
 
@@ -38,6 +39,7 @@ static class GoogleConnection {
             options.Scope.Add("openid");
             options.Scope.Add("email");
             options.Scope.Add(DriveScope);
+            options.Scope.Add(DriveMetadataScope);
             options.Scope.Add(CalendarScope);
             options.SaveTokens = false;
             options.CorrelationCookie.SameSite = SameSiteMode.Lax;

@@ -25,7 +25,7 @@ foreach (var code in new[] { 400, 401, 403, 404, 429, 500 }) {
     catch (PlannerException ex) { Check(!ex.Message.Contains("SECRET")); }
 }
 
-var folder = new Step("drive", "Buat folder", "Folder proyek") { Name = "user testing" };
+var folder = new Step("drive", "Buat folder", "Folder proyek") { Name = "user testing", Action = "create_folder" };
 var calendar = new Step("calendar", "Buat meeting", "Diskusi") { Name = "Diskusi proyek", Start = "2026-10-08T15:00:00+07:00", End = "2026-10-08T16:00:00+07:00" };
 var discord = new Step("discord", "Bagikan link", "Halo tim") { IncludeLinks = true };
 Check(PlanContract.Validate([folder, calendar, discord]) is null);
@@ -82,7 +82,7 @@ Check(workflow.Status == "completed" && routing.Requests == 3);
 Check(routing.DiscordBody!.Contains("https://drive.google.com/drive/folders/folder123"));
 Check(routing.DiscordBody.Contains("https://www.google.com/calendar/event?eid=123"));
 using (var sent = JsonDocument.Parse(routing.DiscordBody)) Check(sent.RootElement.GetProperty("allowed_mentions").GetProperty("parse").GetArrayLength() == 0);
-var failed = new Workflow("Failure test", "live", "ai", [new("drive", "Folder", "Folder") { Name = "Test" }, new("discord", "Message", "Hello")]) { Owner = "owner" };
+var failed = new Workflow("Failure test", "live", "ai", [new("drive", "Folder", "Folder") { Name = "Test", Action = "create_folder" }, new("discord", "Message", "Hello")]) { Owner = "owner" };
 store.Items[failed.Id] = failed;
 var rejected = new RoutingHandler(true);
 using (var worker = new WorkflowWorker(store, new FakeFactory(rejected), Config(new()), tokens, pro)) {
@@ -103,7 +103,7 @@ meet.Status = "completed"; meet.ResultUrl = meetResult.Url; meet.MeetUrl = meetR
 Check(GoogleActions.DiscordContent(discord, [meet]).Contains(meet.MeetUrl!));
 try { await GoogleActions.Execute(meet, "owner", tokens, new HttpClient(new MeetHandler(true)), default); throw new Exception("Expected Meet failure"); }
 catch (ActionFailure ex) { Check(ex.ResultUrl == "https://www.google.com/calendar/event?eid=123"); }
-var deniedWorkflow = new Workflow("Google without Pro", "live", "ai", [new("drive", "Folder", "Folder") { Name = "Test" }]) { Owner = "owner" };
+var deniedWorkflow = new Workflow("Google without Pro", "live", "ai", [new("drive", "Folder", "Folder") { Name = "Test", Action = "create_folder" }]) { Owner = "owner" };
 store.Items[deniedWorkflow.Id] = deniedWorkflow;
 var deniedHttp = new RoutingHandler(false);
 using (var worker = new WorkflowWorker(store, new FakeFactory(deniedHttp), Config(new()), tokens, free)) {
@@ -120,6 +120,7 @@ Check(restored.Steps[0].Id == folder.Id && restored.Steps[0].Name == folder.Name
 Check(WorkspaceEndpoints.Valid(JsonSerializer.Deserialize<JsonElement>("{\"workspace\":\"Orbit\",\"draft\":\"\",\"projects\":[]}")));
 Check(!WorkspaceEndpoints.Valid(JsonSerializer.Deserialize<JsonElement>("{\"workspace\":123,\"draft\":\"\",\"projects\":[]}")));
 Console.WriteLine("PASS: manual simulated Pro activation, planner/schema, Google payloads, timestamp validation, token isolation/expiry/scopes, real-result link forwarding, queued execution, failure stop, Meet polling/link forwarding and Pro gates (mock HTTP).");
+await DriveChecks.Run();
 try { await DatabaseChecks.Run(); }
 catch (Exception e) {
     Console.Error.WriteLine($"FAIL: database integration checks ({e.GetType().Name}).");
