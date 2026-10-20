@@ -15,6 +15,7 @@ builder.Services.AddHttpClient("external", client => client.Timeout = TimeSpan.F
 builder.Services.AddSingleton<WorkflowStore>();
 builder.Services.AddSingleton<FeatureAccess>();
 builder.Services.AddHostedService<WorkflowWorker>();
+builder.Services.AddHostedService<ReminderWorker>();
 builder.AddGoogleConnection();
 var app = builder.Build();
 var database = app.Services.GetRequiredService<OrbitDatabase>();
@@ -27,6 +28,9 @@ app.UseWorkspaceAccess(database);
 app.MapWorkspaceEndpoints(database);
 app.MapGoogleConnection();
 app.MapDriveFolders();
+app.MapAccountFeatures(database);
+app.MapGet("/api/reminders", (HttpContext c) => database.Reminders(AccountFeatures.Owner(c)));
+app.MapPost("/api/reminders/{id:guid}/cancel", (Guid id, HttpContext c) => database.CancelReminder(AccountFeatures.Owner(c), id) ? Results.Ok(new { cancelled = true }) : Results.Conflict(new { error = "Reminder tidak tersedia atau sudah diproses." }));
 app.MapGet("/api/billing", (FeatureAccess access, HttpContext context) => database.Enabled ? database.Billing(context.User.FindFirstValue("orbit_google_connection")!) : access.Snapshot());
 app.MapPost("/api/billing/simulate-payment", (FeatureAccess access, HttpContext context) => {
     if (database.Enabled || app.Configuration.GetValue<bool>("Deployment:Public")) return Results.StatusCode(403);
@@ -62,7 +66,8 @@ app.MapPost("/api/workflows/plan", async (PlanRequest request, WorkflowStore sto
     if (aiEnabled) {
         if (database.Enabled && !database.ReservePlan(context.User.FindFirstValue("orbit_google_connection")!)) return Results.Json(new { error = "Kuota 20 penyusunan AI bulan ini habis. Kuota direset awal bulan UTC.", code = "quota_exceeded" }, statusCode: 429);
         try {
-            steps = await Planner.Create(request.Prompt, config, clients.CreateClient("external"), ct);
+            var prefs = database.ReadAccount(AccountFeatures.Owner(context)).Preferences;
+            steps = await Planner.Create(request.Prompt, config, clients.CreateClient("external"), ct, AccountFeatures.PlannerContext(prefs));
             source = "ai";
         } catch (PlannerException ex) {
             return Results.Problem(statusCode: 502, title: ex.Message);
@@ -85,15 +90,20 @@ app.MapPost("/api/workflows/plan", async (PlanRequest request, WorkflowStore sto
         ];
     }
     if (steps.Count is < 1 or > 5 || steps.Any(s => s.Agent is not ("drive" or "calendar" or "discord") || string.IsNullOrWhiteSpace(s.Title) || string.IsNullOrWhiteSpace(s.Detail)))
-        return Results.BadRequest(new { error = "Rencana tidak valid. Coba instruksi yang lebih spesifik." });
+        return Results.BadRequest(new { error = "Belum ada langkah yang bisa dijalankan. Sebutkan tindakan, judul meeting, tanggal, serta jam mulai dan selesai." });
     if (source == "ai" && PlanContract.Validate(steps) is string validation) return Results.BadRequest(new { error = validation });
+    foreach (var step in steps.Where(s => s.Agent == "calendar"))
+        AccountFeatures.Resolve(step, database.ReadAccount(AccountFeatures.Owner(context)), request.Prompt);
+    if (steps.Any(s => s.Attendees.Length > 200)) return Results.BadRequest(new { error = "Maksimal 200 peserta per meeting." });
     if (request.Mode == "live") {
+        if (steps.Any(s => s.ReminderMinutes is not null) && !database.Enabled)
+            return Results.BadRequest(new { error = "Reminder terjadwal membutuhkan database." });
         if (access.Blocks(steps, context.User.FindFirstValue("orbit_google_connection"))) return FeatureAccess.UpgradeRequired();
-        if (steps.Any(s => s.Agent == "discord") && !Webhook.IsValid(database.Enabled ? database.ReadConnection<string>(context.User.FindFirstValue("orbit_google_connection")!, "discord") : config["Discord:WebhookUrl"])) return Results.BadRequest(new { error = "Konfigurasi webhook Discord belum valid." });
+        if (steps.Any(s => s.Agent == "discord" || s.ReminderMinutes is not null) && !Webhook.IsValid(database.Enabled ? database.ReadConnection<string>(context.User.FindFirstValue("orbit_google_connection")!, "discord") : config["Discord:WebhookUrl"])) return Results.BadRequest(new { error = "Konfigurasi webhook Discord belum valid." });
         if (steps.Any(s => s.Agent == "drive") && !google.HasScope(context, GoogleConnection.DriveScope)) return Results.BadRequest(new { error = "Hubungkan akun Google dan berikan izin Drive terlebih dahulu." });
         if (steps.Any(s => s.Agent == "calendar") && !google.HasScope(context, GoogleConnection.CalendarScope)) return Results.BadRequest(new { error = "Hubungkan akun Google dan berikan izin Calendar terlebih dahulu." });
     }
-    var workflow = new Workflow(request.Prompt.Trim(), request.Mode, source, steps) { Owner = context.User.FindFirstValue("orbit_google_connection") };
+    var workflow = new Workflow(request.Prompt.Trim(), request.Mode, source, steps) { Owner = context.User.FindFirstValue("orbit_google_connection"), Language = database.ReadAccount(AccountFeatures.Owner(context)).Preferences.Language, TimeZone = database.ReadAccount(AccountFeatures.Owner(context)).Preferences.TimeZone };
     store.Persist(workflow);
     store.Items[workflow.Id] = workflow;
     return Results.Ok(workflow.Snapshot());
@@ -107,6 +117,8 @@ app.MapPost("/api/workflows/{id:guid}/execute", (Guid id, ExecuteRequest request
             return Results.BadRequest(new { error = "Konfirmasi pembuatan folder baru. Untuk folder yang sudah ada, susun ulang instruksi dengan gunakan folder lama." });
         if (workflow.Steps.Any(s => s.Agent == "drive" && (s.Action is not ("create_folder" or "use_existing_folder" or "list_folder_files") || (s.Action != "create_folder" && string.IsNullOrEmpty(s.FolderId)))))
             return Results.BadRequest(new { error = "Pilih folder untuk setiap langkah Drive yang memakai folder lama. Rencana lama tanpa jenis tindakan harus disusun ulang." });
+        if (workflow.Steps.Any(s => s.RecipientIssues.Length > 0)) return Results.BadRequest(new { error = "Lengkapi atau pilih peserta meeting terlebih dahulu." });
+        if (workflow.Steps.Any(s => s.Agent == "calendar" && DateTimeOffset.TryParse(s.Start, out var date) && date <= DateTimeOffset.UtcNow)) return Results.BadRequest(new { error = "Waktu meeting sudah lewat. Susun ulang dengan tanggal yang akan datang." });
         workflow.Status = "queued";
         try {
             if (!database.QueueWorkflow(workflow)) { workflow.Status = "planned"; return FeatureAccess.UpgradeRequired(); }
@@ -135,12 +147,18 @@ sealed class Step(string agent, string title, string detail) {
     public string End { get; init; } = "";
     public bool IncludeLinks { get; init; }
     public bool CreateMeet { get; init; }
+    public string[] Participants { get; init; } = [];
+    public string[] Attendees { get; set; } = [];
+    public RecipientIssue[] RecipientIssues { get; set; } = [];
+    public int? ReminderMinutes { get; set; }
     public string? MeetUrl { get; set; }
     public string? ResultUrl { get; set; }
 }
 sealed class Workflow(string prompt, string mode, string source, List<Step> steps) {
     public object Sync { get; } = new();
     public string? Owner { get; set; }
+    public string Language { get; set; } = "id";
+    public string TimeZone { get; set; } = "Asia/Jakarta";
     public Guid Id { get; init; } = Guid.NewGuid();
     public string Prompt { get; } = prompt;
     public string Mode { get; } = mode;
@@ -148,8 +166,8 @@ sealed class Workflow(string prompt, string mode, string source, List<Step> step
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
     public string Status { get; set; } = "planned";
     public List<Step> Steps { get; } = steps;
-    public object Snapshot() { lock (Sync) return new { Id, Prompt, Mode, Source, CreatedAt, Status,
-        Steps = Steps.Select(s => new { s.Id, s.Agent, s.Title, s.Detail, s.Status, s.Result, s.Name, s.Action, s.FolderId, s.FolderName, s.Start, s.End, s.IncludeLinks, s.CreateMeet, s.MeetUrl, s.ResultUrl }).ToArray() }; }
+    public object Snapshot() { lock (Sync) return new { Id, Prompt, Mode, Source, CreatedAt, Status, Language, TimeZone,
+        Steps = Steps.Select(s => new { s.Id, s.Agent, s.Title, s.Detail, s.Status, s.Result, s.Name, s.Action, s.FolderId, s.FolderName, s.Start, s.End, s.IncludeLinks, s.CreateMeet, s.MeetUrl, s.ResultUrl, s.Participants, s.Attendees, s.RecipientIssues, s.ReminderMinutes }).ToArray() }; }
 }
 sealed class WorkflowStore(OrbitDatabase? database = null) {
     public void Persist(Workflow workflow) => database?.SaveWorkflow(workflow);
@@ -193,6 +211,7 @@ sealed class WorkflowWorker(WorkflowStore store, IHttpClientFactory clients, ICo
                         var output = await GoogleActions.Execute(step, workflow.Owner, google, clients.CreateClient("external"), stoppingToken);
                         result = output.Message;
                         lock (workflow.Sync) { step.ResultUrl = output.Url; step.MeetUrl = output.MeetUrl; }
+                        if (step.Agent == "calendar") database?.ScheduleReminder(workflow, step);
                     } else {
                         var url = database?.Enabled == true ? database.ReadConnection<string>(workflow.Owner!, "discord") : config["Discord:WebhookUrl"];
                         if (step.Agent != "discord" || !Webhook.IsValid(url)) throw new InvalidOperationException();
@@ -222,12 +241,12 @@ sealed class WorkflowWorker(WorkflowStore store, IHttpClientFactory clients, ICo
     }
 }
 static class Planner {
-    public static async Task<List<Step>> Create(string prompt, IConfiguration config, HttpClient client, CancellationToken ct) {
-        var settings = AiSettings.Read(config); if (settings.Provider == "Gemini") return await GeminiPlanner.Create(prompt, settings, client, ct); using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/responses");
+    public static async Task<List<Step>> Create(string prompt, IConfiguration config, HttpClient client, CancellationToken ct, string context = "") {
+        var settings = AiSettings.Read(config); if (settings.Provider == "Gemini") return await GeminiPlanner.Create(prompt, settings, client, ct, context); using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/responses");
         request.Headers.Authorization = new("Bearer", config["OpenAI:ApiKey"]);
         request.Content = JsonContent.Create(new {
             model = config["OpenAI:Model"], store = false,
-            instructions = PlanContract.Instructions,
+            instructions = PlanContract.Instructions + context,
             input = prompt,
             text = new { format = new { type = "json_schema", name = "workflow_plan", strict = true, schema = PlanContract.Schema } }
         });

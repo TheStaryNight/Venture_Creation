@@ -21,13 +21,13 @@ sealed record AiSettings(string Provider, string Key, string Model, string? Erro
 sealed class PlannerException(string message) : Exception(message);
 
 static class GeminiPlanner {
-    public static async Task<List<Step>> Create(string prompt, AiSettings settings, HttpClient client, CancellationToken ct) {
+    public static async Task<List<Step>> Create(string prompt, AiSettings settings, HttpClient client, CancellationToken ct, string context = "") {
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions");
         request.Headers.Authorization = new("Bearer", settings.Key);
         request.Content = JsonContent.Create(new {
             model = settings.Model,
             messages = new[] {
-                new { role = "system", content = PlanContract.Instructions },
+                new { role = "system", content = PlanContract.Instructions + context },
                 new { role = "user", content = prompt }
             },
             response_format = new { type = "json_schema", json_schema = new { name = "workflow_plan", strict = true, schema = PlanContract.Schema } }

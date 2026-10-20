@@ -5,7 +5,7 @@ using Npgsql;
 using NpgsqlTypes;
 
 // A single API/worker replica owns the advisory lock. All application queries stay server-side.
-sealed class OrbitDatabase : IDisposable {
+sealed partial class OrbitDatabase : IDisposable {
     private readonly NpgsqlDataSource? source;
     private NpgsqlConnection? lease;
     private readonly byte[]? key;
@@ -25,12 +25,12 @@ sealed class OrbitDatabase : IDisposable {
         using var claim = new NpgsqlCommand("select pg_try_advisory_lock(7418236501)", lease);
         if (!(bool)(await claim.ExecuteScalarAsync(ct))!) throw new InvalidOperationException("Orbit currently supports one backend replica. Another instance owns the database worker lock.");
         // Schema is applied explicitly by --migrate, never implicitly by a public request.
-        using var version = source.CreateCommand("select version from orbit.schema_versions where version=1");
+        using var version = source.CreateCommand("select version from orbit.schema_versions where version=2");
         if (await version.ExecuteScalarAsync(ct) is null) throw new InvalidOperationException("Apply the Orbit database migration first.");
     }
     public async Task Migrate(CancellationToken ct = default) {
         if (source is null) throw new InvalidOperationException("ConnectionStrings:Orbit is missing.");
-        var sql = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Database", "001_initial.sql"), ct);
+        var sql = string.Join("\n", await Task.WhenAll(Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "Database"), "*.sql").OrderBy(p => p).Select(p => File.ReadAllTextAsync(p, ct))));
         await using var connection = await source.OpenConnectionAsync(ct);
         await using var transaction = await connection.BeginTransactionAsync(ct);
         using var command = new NpgsqlCommand(sql, connection, transaction);
@@ -68,8 +68,7 @@ sealed class OrbitDatabase : IDisposable {
     }
     public void VerifyWorkerLease() {
         if (!Enabled) return;
-        using var command = new NpgsqlCommand("select 1", lease!);
-        command.ExecuteScalar(); // Never execute effects after losing the single-worker connection.
+        lock (accountLock) { using var command = new NpgsqlCommand("select 1", lease!); command.ExecuteScalar(); } // Never execute effects after losing the single-worker connection.
     }
     public bool QueueWorkflow(Workflow workflow) {
         if (source is null) return true;

@@ -121,6 +121,8 @@ Check(WorkspaceEndpoints.Valid(JsonSerializer.Deserialize<JsonElement>("{\"works
 Check(!WorkspaceEndpoints.Valid(JsonSerializer.Deserialize<JsonElement>("{\"workspace\":123,\"draft\":\"\",\"projects\":[]}")));
 Console.WriteLine("PASS: manual simulated Pro activation, planner/schema, Google payloads, timestamp validation, token isolation/expiry/scopes, real-result link forwarding, queued execution, failure stop, Meet polling/link forwarding and Pro gates (mock HTTP).");
 await DriveChecks.Run();
+await AccountChecks.Run();
+await AccountChecks.RunDatabase();
 try { await DatabaseChecks.Run(); }
 catch (Exception e) {
     Console.Error.WriteLine($"FAIL: database integration checks ({e.GetType().Name}).");

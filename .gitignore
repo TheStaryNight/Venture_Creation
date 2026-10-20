@@ -9,3 +9,6 @@ obj/
 backend/AgentHub.Api/appsettings.Development.json
 
 backend/AgentHub.Api/appsettings.Local.json
+
+# Supabase CLI cache
+supabase/.temp/

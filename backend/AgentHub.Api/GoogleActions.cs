@@ -13,7 +13,7 @@ static class GoogleActions {
             throw new ActionFailure("Koneksi Google kedaluwarsa atau izin belum diberikan. Hubungkan Google lagi, lalu buat rencana baru.");
         using var request = new HttpRequestMessage(HttpMethod.Post, step.Agent == "drive"
             ? "https://www.googleapis.com/drive/v3/files?fields=id"
-            : "https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=none" + (step.CreateMeet ? "&conferenceDataVersion=1" : ""));
+            : "https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=" + (step.Attendees.Length > 0 ? "all" : "none") + (step.CreateMeet ? "&conferenceDataVersion=1" : ""));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
         request.Content = step.Agent == "drive"
             ? JsonContent.Create(new { name = step.Name, mimeType = "application/vnd.google-apps.folder" })
@@ -32,12 +32,12 @@ static class GoogleActions {
         var url = body.RootElement.GetProperty("htmlLink").GetString();
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != "https" || uri.Host is not ("www.google.com" or "calendar.google.com"))
             throw new ActionFailure("Event dibuat tetapi tautan hasil tidak valid. Periksa Calendar sebelum mengulang.");
-        if (!step.CreateMeet) return ("Meeting dibuat di kalender utama tanpa mengirim undangan peserta.", url!, null);
+        if (!step.CreateMeet) return ("Meeting dibuat di kalender utama. Undangan dikirim ke peserta yang tercantum.", url!, null);
         try {
             var current = body.RootElement.Clone();
             for (var attempt = 0; attempt < 5; attempt++) {
                 var meetUrl = MeetLink(current);
-                if (meetUrl is not null) return ("Acara dan tautan Google Meet berhasil dibuat tanpa undangan peserta.", url!, meetUrl);
+                if (meetUrl is not null) return ("Meeting dan tautan Google Meet sudah dibuat. Undangan dikirim ke peserta yang tercantum.", url!, meetUrl);
                 if (current.TryGetProperty("conferenceData", out var conference) && conference.TryGetProperty("createRequest", out var creation)
                     && creation.TryGetProperty("status", out var status) && status.GetProperty("statusCode").GetString() == "failure") break;
                 if (attempt == 4) break;
@@ -59,6 +59,7 @@ static class GoogleActions {
             ["id"] = step.Id.ToString("N"), ["summary"] = step.Name,
             ["start"] = new { dateTime = step.Start }, ["end"] = new { dateTime = step.End }
         };
+        if (step.Attendees.Length > 0) payload["attendees"] = step.Attendees.Select(email => new { email }).ToArray();
         if (step.CreateMeet) payload["conferenceData"] = new { createRequest = new {
             requestId = step.Id.ToString("N"), conferenceSolutionKey = new { type = "hangoutsMeet" }
         } };

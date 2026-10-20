@@ -7,7 +7,7 @@ $connection.set_Item('Root Certificate', '/app/out/Certificates/supabase-ca.crt'
 $variables = [ordered]@{
     PORT = '8080'
     Deployment__Public = 'true'
-    Deployment__FrontendUrl = 'https://venture-creation-two.vercel.app'
+    Deployment__FrontendUrl = 'https://orbitworkspaces.vercel.app'
     ConnectionStrings__Orbit = $connection.get_ConnectionString()
     Security__EncryptionKey = $config.Security.EncryptionKey
     AI__Provider = 'Gemini'

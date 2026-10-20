@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { api, type Project } from './data';
 
@@ -17,15 +18,15 @@ export function SessionGate({ children }: { children: (value: Bootstrap) => Reac
         if (current.database && !current.authenticated) return;
         const saved = current.database ? await api<{ state: WorkspaceState; revision: number }>('/workspace') : undefined;
         if (active) setBootstrap({ cloud: current.database, owner: current.owner, loginUrl: current.loginUrl, ...saved });
-      } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Tidak dapat membuka workspace.'); }
+      } catch (e) { if (active) setError(e instanceof Error ? e.message : t("Tidak dapat membuka workspace.")); }
     }
     void load(); return () => { active = false; };
   }, [attempt]);
   if (bootstrap) return children(bootstrap);
-  return <main className="session-screen"><section className="session-card"><span className="label">ORBIT WORKSPACE</span><h1>Semua pekerjaan, satu tempat.</h1><p>Masuk untuk menyimpan proyek dan menjalankan pekerjaan dengan akunmu.</p>
-    {error ? <><p role="alert" className="banner error">{error}</p><button className="button primary" onClick={() => { setError(''); setAttempt(attempt + 1); }}>Coba lagi</button></>
-      : session && !session.authenticated ? <><button className="button primary" onClick={() => window.location.assign(session.loginUrl)}>Masuk dengan Google</button><p className="storage-note">Google akan meminta izin untuk koneksi Drive dan Calendar. Satu akun memiliki satu workspace pribadi.</p></>
-        : <p role="status">Membuka workspace…</p>}
+  return <main className="session-screen"><section className="session-card"><span className="label">ORBIT WORKSPACE</span><h1>{t("Semua pekerjaan, satu tempat.")}</h1><p>{t("Masuk untuk menyimpan proyek dan menjalankan pekerjaan dengan akunmu.")}</p>
+    {error ? <><p role="alert" className="banner error">{error}</p><button className="button primary" onClick={() => { setError(''); setAttempt(attempt + 1); }}>{t("Coba lagi")}</button></>
+      : session && !session.authenticated ? <><button className="button primary" onClick={() => window.location.assign(session.loginUrl)}>{t("Masuk dengan Google")}</button><p className="storage-note">{t("Google akan meminta izin untuk koneksi Drive dan Calendar. Satu akun memiliki satu workspace pribadi.")}</p></>
+        : <p role="status">{t("Membuka workspace…")}</p>}
   </section></main>;
 }
 
@@ -53,7 +54,7 @@ export function useWorkspace(bootstrap: Bootstrap) {
         if (latest.current === current) latest.current = null;
       }
       setError('');
-    } catch (e) { blocked.current = true; setError(e instanceof Error ? e.message : 'Perubahan belum tersimpan.'); }
+    } catch (e) { blocked.current = true; setError(e instanceof Error ? e.message : t("Perubahan belum tersimpan.")); }
     finally { running.current = false; setSaving(false); }
   }
   useEffect(() => {
