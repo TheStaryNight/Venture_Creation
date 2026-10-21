@@ -6,7 +6,6 @@ import { usePageTransition } from '../hooks/usePageTransition';
 import {
   AlertCircle,
   ArrowUpRight,
-  ChevronDown,
   ChevronRight,
   CircleCheck,
   Menu,
@@ -40,7 +39,6 @@ export function AppShell() {
     setUpgrade,
     page,
     projects,
-    workspace,
     projectId,
     online,
     active,
@@ -72,14 +70,6 @@ export function AppShell() {
         <button className="brand" onClick={() => navigate('home')}>
           <OrbitLogo />
           orbit<span className="brand-caption">workspace</span>
-        </button>
-        <button className="workspace-switch" onClick={() => navigate('settings')}>
-          <span className="workspace-avatar">{workspace.slice(0, 2).toUpperCase()}</span>
-          <span>
-            {workspace}
-            <small>{t('Ruang kerja pribadi')}</small>
-          </span>
-          <ChevronDown size={14} />
         </button>
         <button
           className="new-work"
@@ -180,13 +170,6 @@ export function AppShell() {
                 ? t('Terhubung ke server')
                 : t('Server tidak terhubung')}
           </div>
-          <div className="local-account">
-            <span className="user-avatar">{workspace.charAt(0).toUpperCase()}</span>
-            <div>
-              {workspace}
-              <small>{bootstrap.cloud ? t('Tersimpan di akun') : t('Penyimpanan lokal')}</small>
-            </div>
-          </div>
         </div>
       </aside>
       <main className="main">
@@ -199,7 +182,7 @@ export function AppShell() {
             >
               <Menu size={20} />
             </button>
-            <span>{workspace}</span>
+            <span>Orbit</span>
             <ChevronRight size={13} />
             <strong>
               {project?.name || navigation.find((n) => n.id === page)?.title || t('Pengaturan')}

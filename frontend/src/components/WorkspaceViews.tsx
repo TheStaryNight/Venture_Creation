@@ -12,31 +12,19 @@ import {
 } from 'lucide-react';
 import { type ReactNode } from 'react';
 import { useAppContext } from '../app/AppContext';
-import { ServiceIcon } from '../components/ServiceIcon';
-import { services, statuses } from '../config/services';
+import { statuses } from '../config/services';
 import { t } from '../i18n';
 import { dateLabel } from '../lib/dateLabel';
 import { type Project, type Workflow } from '../types';
 
 export function WorkflowComposer() {
-  const {
-    workspace,
-    ai,
-    online,
-    mode,
-    setMode,
-    busy,
-    setDetail,
-    project,
-    prompt,
-    setPrompt,
-    plan,
-  } = useAppContext();
+  const { ai, online, mode, setMode, busy, setDetail, project, prompt, setPrompt, plan } =
+    useAppContext();
   return (
     <section className="composer">
       <div className="composer-header">
         <span className="label">{t('PEKERJAAN BARU')}</span>
-        <span className="quiet">{project?.name || workspace}</span>
+        {project && <span className="quiet">{project.name}</span>}
       </div>
       <textarea
         aria-label={t('Instruksi pekerjaan')}
@@ -48,15 +36,6 @@ export function WorkflowComposer() {
         )}
       />
       <div className="composer-toolbar">
-        <div className="composer-services">
-          {services.map((s) => (
-            <ServiceIcon key={s.id} id={s.id} small />
-          ))}
-          <span>
-            {services.length}
-            {t('aplikasi')}
-          </span>
-        </div>
         <button
           className="button primary"
           disabled={!prompt.trim() || busy || !online}
@@ -215,11 +194,10 @@ export function PageHeading({
   subtitle: string;
   action?: ReactNode;
 }) {
-  const { page, workspace } = useAppContext();
   return (
     <div className="page-title">
       <div>
-        <span className="overline">{page === 'home' ? 'RUANG KERJA' : workspace}</span>
+        <span className="overline">ORBIT</span>
         <h1>{t(title)}</h1>
         <p>{subtitle}</p>
       </div>

@@ -5,37 +5,16 @@ import { PageHeading } from '../components/WorkspaceViews';
 import { t } from '../i18n';
 
 export function SettingsPage() {
-  const { bootstrap, page, projects, workspace, setWorkspace, draft, setNotice, save } =
-    useAppContext();
+  const { bootstrap, page, projects, workspace, draft } = useAppContext();
   if (!(page === 'settings')) return null;
   return (
     <>
       <PageHeading
-        title={t('Pengaturan workspace')}
-        subtitle={t('Atur nama ruang kerja dan unduh salinan data lokal.')}
+        title={t('Pengaturan')}
+        subtitle={t('Atur tampilan, bahasa, zona waktu, dan salinan datamu.')}
       />
       <section className="settings-panel">
         <PreferencesPanel />
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const name = String(new FormData(e.currentTarget).get('workspace') || '').trim();
-            if (name && save(() => setWorkspace(name))) setNotice(t('Nama workspace disimpan.'));
-          }}
-        >
-          <label className="field-label" htmlFor="workspace-name">
-            {t('Nama workspace')}
-          </label>
-          <input
-            id="workspace-name"
-            name="workspace"
-            defaultValue={workspace}
-            maxLength={60}
-            required
-          />
-          <p>{t('Nama ini tampil di navigasi dan instruksi baru.')}</p>
-          <button className="button primary">{t('Simpan perubahan')}</button>
-        </form>
         <div className="settings-section">
           <h2>{t('Data lokal')}</h2>
           <p>

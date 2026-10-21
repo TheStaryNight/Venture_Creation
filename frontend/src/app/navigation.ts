@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { t } from '../i18n';
 export const navigation = [
-  { id: 'home', title: t('Ringkasan'), icon: LayoutGrid },
+  { id: 'home', title: t('Dashboard'), icon: LayoutGrid },
   { id: 'projects', title: t('Project'), icon: Layers2 },
   { id: 'activity', title: t('Percakapan'), icon: Clock3 },
   { id: 'connections', title: t('Koneksi'), icon: Plug },

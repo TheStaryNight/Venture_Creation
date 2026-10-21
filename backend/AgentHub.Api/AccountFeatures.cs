@@ -2,7 +2,7 @@ using System.Net.Mail;
 using System.Security.Claims;
 using System.Text.Json;
 
-sealed record AccountPreferences(string Language = "id", string Theme = "system", string TimeZone = "");
+sealed record AccountPreferences(string Language = "id", string Theme = "system", string TimeZone = "", bool FollowDeviceTimeZone = true);
 sealed record Contact(Guid Id, string Name, string Email);
 sealed record ContactGroup(Guid Id, string Name, Guid[] Members);
 sealed class AccountData

@@ -6,6 +6,7 @@ export type Preferences = {
   language: 'id' | 'en';
   theme: 'light' | 'dark' | 'system';
   timeZone: string;
+  followDeviceTimeZone: boolean;
 };
 const zones = [
   { value: 'UTC', label: 'UTC+00:00' },
@@ -13,23 +14,8 @@ const zones = [
   { value: 'Etc/GMT-8', label: 'UTC+08:00 (WITA)' },
   { value: 'Etc/GMT-9', label: 'UTC+09:00 (WIT)' },
 ];
-function utcZone(zone: string): string {
-  if (zones.some((z) => z.value === zone)) return zone;
-  try {
-    const offset = new Intl.DateTimeFormat('en', { timeZone: zone, timeZoneName: 'shortOffset' })
-      .formatToParts(new Date())
-      .find((p) => p.type === 'timeZoneName')?.value;
-    return (
-      (
-        { 'GMT+7': 'Etc/GMT-7', 'GMT+8': 'Etc/GMT-8', 'GMT+9': 'Etc/GMT-9' } as Record<
-          string,
-          string
-        >
-      )[offset || ''] || 'UTC'
-    );
-  } catch {
-    return 'UTC';
-  }
+function deviceTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 }
 function preferenceError(e: unknown): string {
   if (e instanceof ApiError && e.status === 401)
@@ -45,7 +31,8 @@ function preferenceError(e: unknown): string {
 const defaults = (): Preferences => ({
   language: 'id',
   theme: 'system',
-  timeZone: utcZone(Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jakarta'),
+  timeZone: deviceTimeZone(),
+  followDeviceTimeZone: true,
 });
 const Context = createContext<{
   preferences: Preferences;
@@ -78,7 +65,8 @@ export function PreferencesProvider({
     const timer = setTimeout(() => controller.abort(), 10000);
     api<Preferences>('/preferences', undefined, controller.signal)
       .then(async (p) => {
-        if (!p.timeZone)
+        p = { ...defaults(), ...p };
+        if (!p.timeZone || (p.followDeviceTimeZone && p.timeZone !== deviceTimeZone()))
           p = await api<Preferences>(
             '/preferences',
             { ...p, timeZone: defaults().timeZone },
@@ -116,12 +104,35 @@ export function PreferencesProvider({
     media.addEventListener('change', apply);
     return () => media.removeEventListener('change', apply);
   }, [preferences, key]);
+  // Refresh the resolved IANA zone on focus and while the app remains open.
+  useEffect(() => {
+    if (!ready || !preferences.followDeviceTimeZone) return;
+    let syncing = false;
+    const sync = () => {
+      if (syncing || preferences.timeZone === deviceTimeZone()) return;
+      syncing = true;
+      void save({ ...preferences, timeZone: deviceTimeZone() })
+        .catch((error) => setError(preferenceError(error)))
+        .finally(() => {
+          syncing = false;
+        });
+    };
+    window.addEventListener('focus', sync);
+    const timer = setInterval(sync, 60000);
+    return () => {
+      window.removeEventListener('focus', sync);
+      clearInterval(timer);
+    };
+  }, [preferences, ready]);
   async function save(value: Preferences) {
     revision.current++;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10000);
     try {
-      const saved = await api<Preferences>('/preferences', value, controller.signal);
+      const resolved = value.followDeviceTimeZone
+        ? { ...value, timeZone: deviceTimeZone() }
+        : value;
+      const saved = await api<Preferences>('/preferences', resolved, controller.signal);
       setPreferences(saved);
       setReady(true);
       setError('');
@@ -145,12 +156,12 @@ export function PreferencesPanel() {
   const { preferences, save } = usePreferences();
   const [draft, setDraft] = useState(() => ({
     ...preferences,
-    timeZone: utcZone(preferences.timeZone),
+    timeZone: preferences.timeZone,
   }));
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
   useEffect(() => {
-    if (!dirty) setDraft({ ...preferences, timeZone: utcZone(preferences.timeZone) });
+    if (!dirty) setDraft({ ...preferences });
   }, [preferences, dirty]);
   function change(value: Preferences) {
     setDraft(value);
@@ -205,9 +216,21 @@ export function PreferencesPanel() {
         {en ? 'Time zone' : 'Zona waktu'}
         <select
           disabled={busy}
-          value={draft.timeZone}
-          onChange={(e) => change({ ...draft, timeZone: e.target.value })}
+          value={draft.followDeviceTimeZone ? 'system' : draft.timeZone}
+          onChange={(e) =>
+            change({
+              ...draft,
+              followDeviceTimeZone: e.target.value === 'system',
+              timeZone: e.target.value === 'system' ? deviceTimeZone() : e.target.value,
+            })
+          }
         >
+          <option value="system">
+            {en ? 'Follow device' : 'Ikuti perangkat'} ({deviceTimeZone()})
+          </option>
+          {!draft.followDeviceTimeZone && !zones.some((zone) => zone.value === draft.timeZone) && (
+            <option value={draft.timeZone}>{draft.timeZone}</option>
+          )}
           {zones.map((zone) => (
             <option key={zone.value} value={zone.value}>
               {zone.label}

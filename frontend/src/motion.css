@@ -728,3 +728,23 @@ textarea:hover:not(:disabled) {
     transition: none !important;
   }
 }
+
+/* Move the entire card, including its sibling delete control. */
+.deletable-project {
+  transition: transform var(--fx-base) var(--fx-ease);
+}
+.deletable-project:hover {
+  transform: translateY(-3px);
+}
+.deletable-project .project-card:hover,
+.deletable-project .project-card:active {
+  transform: none;
+}
+.composer-toolbar {
+  justify-content: flex-end;
+}
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .deletable-project:hover {
+    transform: none;
+  }
+}

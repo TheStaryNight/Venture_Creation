@@ -136,6 +136,7 @@ small {
   border-radius: 5px;
 }
 .new-work {
+  margin-top: 24px;
   display: flex;
   align-items: center;
   gap: 9px;
