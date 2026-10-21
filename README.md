@@ -1,99 +1,124 @@
 # Orbit — AI Agent Hub
 
-Panduan struktur kode dan pemeriksaan sebelum commit: [Engineering guide](docs/engineering-guide.md).
+Orbit membantu mengatur project dan menjalankan pekerjaan lintas aplikasi dari instruksi sehari-hari. Pengguna meninjau rencana, penerima, waktu, dan isi pesan sebelum menyetujui eksekusi.
 
-**Koneksi akun Google:** [panduan OAuth lokal](docs/GOOGLE.md). Login, pembuatan folder/event, dan penerusan tautan ke Discord tersedia.
+Contoh: “Buat meeting besok jam 7–9 pagi dengan Grup A, tambahkan Google Meet, lalu ingatkan di Discord.”
 
-**Gemini / Google AI Studio sudah didukung.** Lihat [panduan Gemini](docs/GEMINI.md) untuk konfigurasi provider dan key.
+Aplikasi masih dalam pengembangan. Frontend production: [orbitworkspaces.vercel.app](https://orbitworkspaces.vercel.app/). Fitur yang tersedia di deployment mengikuti versi terakhir yang berhasil di-deploy.
 
-Workspace untuk mengatur proyek dan menjalankan pekerjaan lintas aplikasi. Sedang dalam pengembangan.
+## Fitur
 
-Panduan akun, credentials, dan pekerjaan integrasi berikutnya: [docs/SETUP.md](docs/SETUP.md).
+- **Dashboard dan project:** project, checklist, tenggat, draft instruksi, serta percakapan terakhir. Project dan percakapan dapat dihapus.
+- **Rencana AI:** Gemini atau OpenAI menyusun langkah terstruktur. Pengguna memeriksa rencana sebelum menjalankannya; informasi penerima yang ambigu perlu dilengkapi.
+- **Google Drive:** membuat folder, menggunakan folder yang sudah ada, dan melihat isinya sesuai izin akun. Memilih folder lama tidak otomatis membuat folder pengganti.
+- **Google Calendar dan Meet:** membuat event, tautan Meet, serta undangan peserta dari email, kontak, atau grup.
+- **Gmail:** membuat draft atau mengirim email setelah persetujuan. Penerima, subjek, dan isi ditampilkan dalam rencana.
+- **Google Docs:** membuat dokumen berisi teks, termasuk di folder yang dipilih dan dapat diakses Orbit.
+- **Discord:** mengirim pesan dan tautan hasil pekerjaan, serta reminder meeting terjadwal. Default reminder 30 menit sebelum meeting.
+- **Kontak & Grup:** kontak manual dan grup pribadi per akun untuk memudahkan pemilihan peserta.
+- **Pengaturan:** Indonesia/English, tema terang/gelap/ikuti perangkat, zona waktu mengikuti perangkat atau pilihan UTC, serta ekspor data lokal.
 
-## Status implementasi
+Mode **Uji tanpa mengirim** tidak menjalankan tindakan nyata pada Google atau Discord. Jika provider AI dikonfigurasi, penyusunan rencana tetap dapat menggunakan API berbayar. Tanpa API key, rencana demo memakai template tetap, bukan interpretasi instruksi.
 
-- React + TypeScript: workspace, proyek, checklist, tenggat, draft otomatis, pengaturan nama, ekspor data lokal, input instruksi, review rencana, progres, koneksi, pencarian dan filter aktivitas.
-- Proyek, checklist dan draft disimpan dalam localStorage browser. Belum ada sinkronisasi anggota. Workflow belum berelasi dengan ID proyek pada backend.
-- ASP.NET Core: API planner, antrean eksekusi, status workflow, dan penolakan eksekusi ganda.
-- Demo berjalan tanpa API key. **Rencana demo tanpa AI selalu menggunakan template tetap**, bukan hasil interpretasi instruksi.
-- OpenAI Responses API: planner terstruktur, aktif setelah API key dan model dikonfigurasi. Belum diuji dengan akun nyata.
-- Discord: pengiriman nyata melalui webhook, hanya setelah rencana disetujui. Belum diuji dengan akun nyata.
-- Google Drive dan Calendar: OAuth, folder My Drive dan event kalender utama. Token masih dalam memori; hubungkan ulang setelah restart atau kedaluwarsa.
-- Riwayat tersimpan dalam memori; restart backend menghapusnya. PostgreSQL, login, dan isolasi data pengguna masih tahap berikutnya.
+## Teknologi dan penyimpanan
 
-Saat ini aplikasi berjalan lokal. Jangan expose backend ke internet sebelum autentikasi, otorisasi, pembatasan request, dan penyimpanan aman selesai.
+| Bagian | Teknologi |
+| --- | --- |
+| Frontend | React, TypeScript, Vite |
+| Backend | ASP.NET Core / .NET 8 |
+| Database | PostgreSQL melalui Npgsql; deployment menggunakan Supabase |
+| Login dan integrasi Google | Google OAuth |
+| Hosting | Vercel untuk frontend, Railway untuk backend |
+
+Pada mode database, data akun, project, workflow, kontak, grup, pengaturan, dan reminder disimpan berdasarkan pemilik akun. Token Google dan webhook Discord disimpan terenkripsi; refresh token digunakan untuk memperbarui akses Google.
+
+Backend saat ini mendukung **satu replica per database**. Worker memakai lock database agar dua instance tidak menjalankan pekerjaan yang sama. Jangan menjalankan backend lokal terhadap database production yang sedang digunakan Railway.
+
+Reminder disimpan setelah event berhasil dibuat. Worker memeriksa jadwal setiap 30 detik; reminder terlambat masih dikirim sebelum meeting dimulai, lalu ditandai terlewat setelah waktunya. Hasil pengiriman yang tidak pasti perlu diperiksa dan tidak dikirim ulang otomatis.
+
+Menghapus project atau percakapan tidak menghapus file Google, event, atau pesan yang sudah dikirim. Penghapusan percakapan juga menghapus reminder terkait; pekerjaan yang sedang antre/berjalan dan reminder yang sedang dikirim tidak dapat dihapus.
 
 ## Jalankan lokal
 
-Prasyarat: Node.js 22+ dan .NET SDK 8. SDK yang tersedia saat bootstrap adalah 8.0.425. Target awal .NET 10 ditunda sampai SDK tersebut tersedia.
+Prasyarat: **Node.js 22+**, **.NET SDK 8**, dan PowerShell. Jalankan perintah berikut dari root repository, yaitu folder yang berisi `frontend`, `backend`, dan `scripts`.
 
-Terminal backend:
-
-```powershell
-cd backend/AgentHub.Api
-dotnet run --urls http://127.0.0.1:5080
-```
-
-Terminal frontend:
+Terminal pertama — backend demo:
 
 ```powershell
-cd frontend
-npm ci
-npm run dev
+powershell -ExecutionPolicy Bypass -File .\scripts\start-backend-local.ps1
 ```
 
-Buka http://127.0.0.1:5173. Frontend mem-proxy `/api` ke backend port 5080.
-
-## Konfigurasi integrasi opsional
-
-Set environment variables di terminal backend sebelum menjalankan server:
+Terminal kedua — frontend:
 
 ```powershell
-$env:OpenAI__ApiKey='<API key pribadi>'
-$env:OpenAI__Model='<model yang mendukung Responses dan Structured Outputs>'
-$env:Discord__WebhookUrl='https://discord.com/api/webhooks/<id>/<token>'
-dotnet run --urls http://127.0.0.1:5080
+npm ci --prefix frontend
+npm run dev --prefix frontend -- --port 5173 --strictPort
 ```
 
-Jangan commit nilai rahasia. `appsettings.Development.json` juga diabaikan Git. Jangan menempelkan key ke frontend. Mode demo tetap tidak menghubungi Discord, tetapi jika key OpenAI dikonfigurasi, pembuatan rencana menggunakan API berbayar.
+Buka [http://127.0.0.1:5173](http://127.0.0.1:5173). Frontend meneruskan `/api` ke backend pada port `5080`. Biarkan kedua terminal berjalan; gunakan `Ctrl+C` untuk menghentikannya sebelum menjalankan ulang.
 
-Untuk pengiriman nyata, coba instruksi: `Kirim pesan ke Discord: Halo kelompok, ini uji integrasi Orbit.` Matikan **Uji tanpa mengirim**, periksa detail pesan pada rencana, lalu pilih **Setujui & jalankan**. Untuk folder dan acara, hubungkan akun Google sesuai panduan OAuth.
+Launcher lokal menonaktifkan koneksi database production dan, secara default, panggilan AI/Google/Discord. Mode ini dapat digunakan saat hosting tidak tersedia.
 
-Eksekusi hanya sekali per workflow. Jika request eksternal timeout, UI menyatakan hasil belum bisa dikonfirmasi dan tidak melakukan retry otomatis. Periksa layanan terkait sebelum membuat pekerjaan baru.
+### Data pada mode lokal
 
-## Verifikasi
+- Project dan draft menggunakan penyimpanan browser.
+- Riwayat workflow disimpan di `.local/workflows` dan tetap tersedia setelah restart. Menghapus percakapan juga menghapus file lokalnya.
+- Kontak, pengaturan akun, dan reminder memerlukan mode database untuk penyimpanan yang tahan restart. Cache pengaturan browser tidak menggantikan database.
+- Data lokal tidak otomatis tersinkronisasi dengan akun production. Ini lingkungan terpisah, bukan perpindahan otomatis saat Railway bermasalah.
+
+### Menguji integrasi nyata
+
+Siapkan credentials mengikuti [panduan setup](docs/SETUP.md), [Google OAuth](docs/GOOGLE.md), dan [Gemini](docs/GEMINI.md). Setelah itu jalankan:
 
 ```powershell
-dotnet build backend/AgentHub.Api
-cd frontend
-npm run build
+powershell -ExecutionPolicy Bypass -File .\scripts\start-backend-local.ps1 -LiveIntegrations
 ```
 
-Dengan backend berjalan tanpa credentials, dari root repo:
+Opsi ini memakai credentials lokal tetapi tetap menonaktifkan database production. Google OAuth lokal perlu mengizinkan callback `http://127.0.0.1:5080/api/google/callback`. Periksa akses Pro/trial untuk tindakan Google, hubungkan akun, lalu tinjau rencana sebelum mengirim.
+
+Simpan secrets di environment backend atau konfigurasi lokal yang diabaikan Git. Jangan commit `appsettings.Local.json`, API key, client secret, password database, atau webhook. Jangan memasukkan secrets ke kode frontend maupun variable `VITE_*`.
+
+## Deployment
+
+Lihat [panduan deployment](docs/DEPLOY.md) untuk database, migrasi, Railway, Vercel, dan Google OAuth.
+
+- Railway menjalankan backend dari `backend/AgentHub.Api`, dengan satu replica.
+- Vercel membangun frontend dari `frontend`; `/api` diteruskan ke backend melalui konfigurasi rewrite.
+- Domain frontend, `Deployment__FrontendUrl`, dan callback yang terdaftar pada Google OAuth harus konsisten.
+- Perubahan kontrak API perlu deployment frontend dan backend yang sesuai. Build lokal yang berhasil belum membuktikan konfigurasi production benar.
+
+## Pemeriksaan sebelum commit
+
+Dari root repository:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
+npm run format:check --prefix frontend
+npm run typecheck --prefix frontend
+npm run build --prefix frontend
+dotnet build tests/PlannerChecks -p:UseSharedCompilation=false -p:UseAppHost=false
+dotnet tests/PlannerChecks/bin/Debug/net8.0/PlannerChecks.dll
 ```
 
-## Pembagian kerja empat orang
+`PlannerChecks` menguji planner, integrasi, kepemilikan data, reminder, serta persistensi/penghapusan workflow lokal. Panggilan layanan eksternal memakai HTTP tiruan dan tidak mengirim email nyata. Tes PostgreSQL hanya berjalan jika database pengujian terpisah dikonfigurasi; jika tidak, tes tersebut dilewati. Jangan arahkan tes ke database production.
 
-1. Frontend: dashboard, edit rencana, aksesibilitas dan pengalaman pengguna.
-2. Backend inti: PostgreSQL/EF Core, login, kepemilikan workflow, persistensi antrean.
-3. Google: OAuth, penyimpanan token terenkripsi, Drive dan Calendar.
-4. AI/integrasi: planner, parameter tool bertipe, klarifikasi informasi yang kurang, Discord dan pengujian.
+Untuk struktur modul dan aturan pengembangan, baca [Engineering guide](docs/engineering-guide.md).
 
-## Tahap berikutnya
+## Batasan saat ini
 
-1. Penyimpanan token Google terenkripsi dan pembaruan access token otomatis.
-2. UI untuk memperbaiki parameter tindakan sebelum eksekusi. Parameter nama folder, waktu dengan zona waktu, dan isi pesan sudah ditampilkan untuk ditinjau.
-3. Persistensi hasil tindakan dan riwayat. Tautan hasil sudah diteruskan ke Discord dalam satu workflow.
-4. PostgreSQL, autentikasi dan pemisahan data pengguna sebelum deployment publik.
-5. Uji akun nyata, kegagalan API, token kedaluwarsa, waktu ambigu, dan pemulihan tanpa duplikasi.
+- Belum ada kolaborasi anggota atau berbagi kontak antar akun.
+- Gmail belum membaca inbox, membalas thread, atau melampirkan file.
+- Docs membuat dokumen baru dengan teks biasa; belum mengedit dokumen lama atau mengatur format kompleks.
+- Akses folder Drive mengikuti izin OAuth. Folder yang terlihat belum tentu dapat ditulisi; lihat batasannya di panduan Drive dan Gmail/Docs.
+- Hasil tindakan eksternal yang tidak pasti tidak diulang otomatis. Periksa layanan tujuan sebelum membuat pekerjaan pengganti.
+- Pembayaran sungguhan belum aktif. Mode database menyediakan Free dan trial Pro; aktivasi simulasi/pengembangan bukan pembayaran.
 
-Nama workspace dapat diubah dalam Pengaturan. Sistem membership belum tersedia.
+## Dokumentasi
 
-Tes planner dan integrasi memakai HTTP tiruan (tidak menulis ke layanan): `dotnet run --project tests/PlannerChecks`.
-
-## Paket dan Google Meet
-
-Discord tersedia pada Free. Drive, Calendar, dan pembuatan tautan Meet termasuk Pro. Popup paket dan ringkasan upgrade tersedia; pembayaran belum aktif. Untuk pengujian Google nyata, aktifkan akses Pro khusus Development sesuai [panduan monetisasi](docs/MONETIZATION.md).
+- [Struktur kode dan pemeriksaan](docs/engineering-guide.md)
+- [Setup akun dan credentials](docs/SETUP.md)
+- [Deployment](docs/DEPLOY.md)
+- [Google OAuth](docs/GOOGLE.md)
+- [Google Drive](docs/DRIVE.md)
+- [Gmail dan Google Docs](docs/gmail-docs.md)
+- [Gemini](docs/GEMINI.md)
+- [Meeting, kontak, dan pengaturan](docs/meetings-settings-release.md)
