@@ -41,9 +41,9 @@ export function SettingsPage() {
           <p>
             {bootstrap.cloud
               ? t(
-                  'Proyek, checklist, dan draft tersimpan pada akunmu. Unduh salinan sebagai cadangan.',
+                  'Project, checklist, dan draft tersimpan pada akunmu. Unduh salinan sebagai cadangan.',
                 )
-              : t('Proyek, checklist, dan draft tersimpan di browser ini.')}
+              : t('Project, checklist, dan draft tersimpan di browser ini.')}
           </p>
           <button
             className="button secondary"

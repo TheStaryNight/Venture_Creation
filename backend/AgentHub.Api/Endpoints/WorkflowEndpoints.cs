@@ -11,6 +11,15 @@ static class WorkflowEndpoints
 
 
         app.MapPost("/api/workflows/plan", Plan);
+        app.MapPost("/api/workflows/{id:guid}/delete", (Guid id, WorkflowStore store, HttpContext context) =>
+        {
+            try
+            {
+                return store.Delete(id, context.User.FindFirstValue("orbit_google_connection"))
+                    ? Results.Ok(new { deleted = true }) : Results.NotFound();
+            }
+            catch (ActionFailure error) { return Results.Conflict(new { error = error.Message }); }
+        });
         app.MapPost("/api/workflows/{id:guid}/execute", Execute);
     }
     private static async Task<IResult> Plan(PlanRequest request, WorkflowStore store, IConfiguration config, IHttpClientFactory clients, HttpContext context, GoogleTokenStore google, FeatureAccess access, CancellationToken ct, OrbitDatabase database)

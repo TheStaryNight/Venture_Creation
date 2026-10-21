@@ -37,6 +37,10 @@ static class DatabaseChecks {
             Check(slots.Count(x => x) == 9 && !db.TrialActive(a));
             var restored = db.LoadWorkflows().Single(w => w.Id == queued.Id);
             Check(restored.Owner == a && restored.Status == "queued" && restored.Steps[0].Name == "Fixture");
+            db.DeleteWorkflow(b, queued.Id);
+            Check(db.LoadWorkflows().Any(w => w.Id == queued.Id));
+            db.DeleteWorkflow(a, queued.Id);
+            Check(!db.LoadWorkflows().Any(w => w.Id == queued.Id));
             using var second = new OrbitDatabase(config);
             try { await second.Initialize(); throw new Exception("Worker lock was not enforced."); }
             catch (InvalidOperationException) { }

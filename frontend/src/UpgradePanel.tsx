@@ -96,7 +96,7 @@ export function UpgradePanel({
                 </li>
                 <li>
                   <Check size={14} />
-                  {t('Proyek & checklist lokal')}
+                  {t('Project & checklist lokal')}
                 </li>
                 <li>
                   <Check size={14} />

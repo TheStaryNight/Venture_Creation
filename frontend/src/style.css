@@ -471,7 +471,7 @@ h1 {
 }
 .work-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 250px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 29px;
 }
 .work-main {
@@ -1401,7 +1401,7 @@ h1 {
     padding-top: 46px;
   }
   .work-layout {
-    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-columns: minmax(0, 1fr);
     gap: 36px;
   }
   .composer textarea {
@@ -1423,7 +1423,7 @@ h1 {
     padding: 0 25px;
   }
   .work-layout {
-    grid-template-columns: minmax(0, 1fr) 210px;
+    grid-template-columns: minmax(0, 1fr);
     gap: 21px;
   }
   .context-panel {
@@ -1829,5 +1829,40 @@ h1 {
 }
 .step-result {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.deletable-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.deletable-row .activity-row {
+  flex: 1;
+  min-width: 0;
+}
+.deletable-project {
+  position: relative;
+  min-width: 0;
+}
+.deletable-project .project-card {
+  width: 100%;
+  height: 100%;
+  padding-right: 48px;
+}
+.deletable-project > .delete-item {
+  position: absolute;
+  right: 12px;
+  top: 16px;
+}
+.delete-item {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+.delete-item:hover:not(:disabled) {
+  color: #d35151;
+}
+.deletion-name {
+  font-weight: 600;
   overflow-wrap: anywhere;
 }

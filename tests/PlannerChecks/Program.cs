@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 
 static void Check(bool condition) { if (!condition) throw new Exception("Planner check failed."); }
 IConfiguration Config(Dictionary<string, string?> values) => new ConfigurationBuilder().AddInMemoryCollection(values).Build();
+DeletionChecks.Run();
 await WorkspaceChecks.Run();
 var settings = AiSettings.Read(Config(new() { ["Gemini:ApiKey"] = "test-only-key", ["OpenAI:ApiKey"] = "old-key", ["OpenAI:Model"] = "Default" }));
 Check(settings.Ready && settings.Provider == "Gemini");

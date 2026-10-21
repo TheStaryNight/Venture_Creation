@@ -74,3 +74,31 @@ PlannerChecks uses mock HTTP for external integrations; it does not send real em
 This reorganization preserves route names, JSON fields, database schema, OAuth scopes and approval rules. It adds no migration. Do not remove owner checks, change reminder retry semantics or weaken workflow approval to simplify code. Keep secrets in ignored local configuration or deployment variables.
 
 Some larger integration and database files remain grouped by feature. Split them when changing that feature rather than introducing an extra abstraction for every method. Theme palette identifiers are retained so this refactor does not change the design.
+
+## Test locally while hosting is unavailable
+
+Open two terminals in the repository root:
+
+```powershell
+# Terminal 1: local backend, demo mode
+powershell -ExecutionPolicy Bypass -File .\scripts\start-backend-local.ps1
+
+# Terminal 2: frontend
+npm run dev --prefix frontend -- --port 5173 --strictPort
+```
+
+Open http://127.0.0.1:5173. Vite forwards `/api` to the backend on port 5080. Demo mode uses template plans and sends no external requests. Projects use browser storage; local workflow/account state is not production database persistence.
+
+To test real integrations, restart the backend script with `-LiveIntegrations`. This uses credentials already configured locally, while still disabling the production database. Google OAuth must allow `http://127.0.0.1:5080/api/google/callback`; real actions still require workflow approval. Persistent database and scheduled reminder recovery need a separate test database.
+
+## Animation layer
+
+`frontend/src/motion.css` contains the presentation layer adapted from the supplied frontend design. `OrbitBackdrop.tsx` renders decorative rings, `usePageTransition.ts` animates page changes without remounting forms, and `ThemeToggle.tsx` uses the existing PreferencesProvider save method. Keep business logic in the existing controllers and API modules. The supplied older App/Preferences implementations were not substituted for these modules. Reduced-motion preferences disable decorative movement and theme transitions.
+
+## Deleting projects and conversations
+
+Project deletion removes the item from the workspace state. Cloud workspaces use the existing owner-scoped, revision-checked workspace save; local projects use browser storage. A failed cloud save stays visible with retry and pending-change protection.
+
+Conversation deletion uses `POST /api/workflows/{id}/delete`. Ownership is checked before any mutation. Queued/running workflows and reminders currently sending cannot be deleted. The database operation locks reminder rows and deletes reminders plus the workflow in one transaction. Previously created Google resources and sent messages remain in their external applications.
+
+The local launcher stores workflow history in the ignored `.local/workflows` directory. Deleting a local conversation removes its file, so it stays deleted after restart. Local data is separate from the hosted account; this is a fallback workstation, not automatic cloud failover or synchronization. Account preferences/contacts and scheduled reminders still need database-backed operation for restart-safe storage.

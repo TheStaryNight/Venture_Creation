@@ -54,7 +54,7 @@ export function SessionGate({ children }: { children: (value: Bootstrap) => Reac
       <section className="session-card">
         <span className="label">ORBIT WORKSPACE</span>
         <h1>{t('Semua pekerjaan, satu tempat.')}</h1>
-        <p>{t('Masuk untuk menyimpan proyek dan menjalankan pekerjaan dengan akunmu.')}</p>
+        <p>{t('Masuk untuk menyimpan project dan menjalankan pekerjaan dengan akunmu.')}</p>
         {error ? (
           <>
             <p role="alert" className="banner error">

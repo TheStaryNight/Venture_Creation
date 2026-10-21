@@ -1,10 +1,14 @@
+import { OrbitLogo } from '../components/OrbitLogo';
+import { DeleteItemDialog } from '../components/DeleteItemDialog';
+import { OrbitBackdrop } from '../components/OrbitBackdrop';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { usePageTransition } from '../hooks/usePageTransition';
 import {
   AlertCircle,
   ArrowUpRight,
   ChevronDown,
   ChevronRight,
   CircleCheck,
-  Layers2,
   Menu,
   Plug,
   Plus,
@@ -53,8 +57,10 @@ export function AppShell() {
     navigate,
     openProject,
   } = useAppContext();
+  const pageContentRef = usePageTransition(page);
   return (
     <div className="app-shell">
+      <OrbitBackdrop />
       {menu && (
         <button
           className="nav-shade"
@@ -64,9 +70,7 @@ export function AppShell() {
       )}
       <aside className={'sidebar ' + (menu ? 'open' : '')}>
         <button className="brand" onClick={() => navigate('home')}>
-          <span className="brand-symbol">
-            <Layers2 size={21} />
-          </span>
+          <OrbitLogo />
           orbit<span className="brand-caption">workspace</span>
         </button>
         <button className="workspace-switch" onClick={() => navigate('settings')}>
@@ -107,10 +111,10 @@ export function AppShell() {
           ))}
         </nav>
         <div className="sidebar-section">
-          <span>{t('PROYEK')}</span>
+          <span>{t('PROJECT')}</span>
           <button
             className="icon-button"
-            aria-label={t('Buat proyek')}
+            aria-label={t('Buat project')}
             onClick={() => setShowProject(true)}
           >
             <Plus size={14} />
@@ -129,7 +133,7 @@ export function AppShell() {
               </button>
             ))
           ) : (
-            <p>{t('Proyekmu akan muncul di sini.')}</p>
+            <p>{t('Projectmu akan muncul di sini.')}</p>
           )}
         </div>
         <div className="sidebar-bottom">
@@ -201,13 +205,16 @@ export function AppShell() {
               {project?.name || navigation.find((n) => n.id === page)?.title || t('Pengaturan')}
             </strong>
           </div>
-          <button className="topbar-connections" onClick={() => navigate('connections')}>
-            <Plug size={14} />
-            {connectedCount}
-            {t('aplikasi terhubung')}
-          </button>
+          <div className="topbar-actions">
+            <ThemeToggle onError={setError} />
+            <button className="topbar-connections" onClick={() => navigate('connections')}>
+              <Plug size={14} />
+              {connectedCount}
+              {t('aplikasi terhubung')}
+            </button>
+          </div>
         </header>
-        <div className="page-content">
+        <div className="page-content" ref={pageContentRef}>
           {cloud.error && (
             <div role="alert" className="banner error">
               <span>{cloud.error}</span>
@@ -238,7 +245,7 @@ export function AppShell() {
             <div className="banner error">
               <AlertCircle size={17} />
               <span>
-                {t('Server tidak dapat dihubungi. Proyek dan draft lokal tetap bisa dibuka.')}
+                {t('Server tidak dapat dihubungi. Project dan draft lokal tetap bisa dibuka.')}
               </span>
               <button className="text-button" onClick={() => void refresh()}>
                 {t('Coba lagi')}
@@ -259,6 +266,7 @@ export function AppShell() {
           {notice}
         </div>
       )}
+      <DeleteItemDialog />
       <CreateProjectDialog />
       <ConnectionDialog />
       {upgrade && (

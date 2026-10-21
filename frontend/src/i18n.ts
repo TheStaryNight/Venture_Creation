@@ -13,8 +13,8 @@ const friendly: Record<string, string> = {
   'Kamu pegang kendali.': 'Kamu yang menentukan.',
   'Kelola aplikasi yang digunakan untuk menjalankan pekerjaan.':
     'Hubungkan aplikasi dan atur kontak untuk pekerjaanmu.',
-  'Proyek tersimpan pada akunmu. Undangan anggota belum tersedia.':
-    'Proyek tersimpan di akunmu. Workspace bersama belum tersedia.',
+  'Project tersimpan pada akunmu. Undangan anggota belum tersedia.':
+    'Project tersimpan di akunmu. Workspace bersama belum tersedia.',
 };
 export function t(text: string): string {
   return language === 'en'

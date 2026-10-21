@@ -5,6 +5,7 @@ import { PreferencesProvider } from './Preferences';
 import { SessionGate } from './WorkspaceSession';
 import './style.css';
 import './theme.css';
+import './motion.css';
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <SessionGate>

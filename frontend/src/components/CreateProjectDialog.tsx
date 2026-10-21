@@ -8,10 +8,10 @@ export function CreateProjectDialog() {
   return (
     <>
       {showProject && (
-        <Dialog title={t('Proyek baru')} close={() => setShowProject(false)}>
+        <Dialog title={t('Project baru')} close={() => setShowProject(false)}>
           <form onSubmit={createProject} className="project-form">
             <label className="field-label" htmlFor="project-name">
-              {t('Nama proyek')}
+              {t('Nama project')}
             </label>
             <input
               id="project-name"
@@ -53,7 +53,7 @@ export function CreateProjectDialog() {
                 {t('Batal')}
               </button>
               <button className="button primary">
-                {t('Buat proyek')}
+                {t('Buat project')}
                 <ArrowRight size={15} />
               </button>
             </div>

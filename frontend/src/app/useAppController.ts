@@ -173,7 +173,46 @@ export function useAppController(bootstrap: Bootstrap) {
     if (id !== 'discord' && billing?.plan !== 'pro') setUpgrade(true);
     else setDetail(id);
   }
+  const [deletion, setDeletion] = useState<{
+    kind: 'project' | 'conversation';
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  function requestDeletion(kind: 'project' | 'conversation', id: string, name: string) {
+    setDeleteError('');
+    setDeletion({ kind, id, name });
+  }
+  async function confirmDeletion() {
+    if (!deletion || deleting) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      if (deletion.kind === 'project') {
+        setProjects(projects.filter((item) => item.id !== deletion.id));
+        if (projectId === deletion.id) navigate('projects');
+      } else {
+        await api('/workflows/' + deletion.id + '/delete', {});
+        if (active?.id === deletion.id) setActive(null);
+        await refresh();
+      }
+      setDeletion(null);
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error ? error.message : t('Belum bisa menghapus. Coba lagi.'),
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
   return {
+    deletion,
+    setDeletion,
+    deleting,
+    deleteError,
+    requestDeletion,
+    confirmDeletion,
     bootstrap,
     preferences,
     connectionTab,

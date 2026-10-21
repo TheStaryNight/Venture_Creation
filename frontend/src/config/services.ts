@@ -26,8 +26,8 @@ export const services = [
   {
     id: 'drive',
     name: 'Google Drive',
-    action: 'Folder proyek',
-    description: 'Simpan dokumen proyek dalam satu tempat.',
+    action: 'Folder project',
+    description: 'Simpan dokumen project dalam satu tempat.',
     available: true,
   },
   {

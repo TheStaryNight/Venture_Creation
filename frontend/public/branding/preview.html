@@ -1,0 +1,59 @@
+<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orbit logo — motion and 2D</title><style>.orbit-logo {
+  --logo-cyan: #64d9f5;
+  --logo-blue: #489ef5;
+  --logo-ice: #a0efff;
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  perspective: 180px;
+  transform-style: preserve-3d;
+}
+
+.orbit-logo__ring {
+  position: absolute;
+  inset: 4px;
+  border: 2px solid var(--logo-cyan);
+  border-radius: 50%;
+  transform-origin: center;
+  box-shadow: 0 0 5px rgb(100 217 245 / 18%);
+}
+
+.orbit-logo__ring--one { transform: rotateZ(-30deg) rotateX(62deg); }
+.orbit-logo__ring--two {
+  border-color: var(--logo-blue);
+  transform: rotateZ(30deg) rotateY(62deg);
+}
+.orbit-logo__ring--three {
+  border-color: var(--logo-ice);
+  transform: rotateZ(90deg) rotateX(62deg);
+}
+
+.orbit-logo--animated .orbit-logo__ring--one { animation: logo-orbit-one 12s linear infinite; }
+.orbit-logo--animated .orbit-logo__ring--two { animation: logo-orbit-two 16s linear infinite; }
+.orbit-logo--animated .orbit-logo__ring--three { animation: logo-orbit-three 20s linear infinite; }
+
+@keyframes logo-orbit-one {
+  from { transform: rotateZ(-30deg) rotateX(62deg) rotateY(0deg); }
+  to { transform: rotateZ(-30deg) rotateX(62deg) rotateY(360deg); }
+}
+@keyframes logo-orbit-two {
+  from { transform: rotateZ(30deg) rotateY(62deg) rotateX(0deg); }
+  to { transform: rotateZ(30deg) rotateY(62deg) rotateX(-360deg); }
+}
+@keyframes logo-orbit-three {
+  from { transform: rotateZ(90deg) rotateX(62deg); }
+  to { transform: rotateZ(450deg) rotateX(62deg); }
+}
+
+:root[data-theme='light'] .orbit-logo {
+  --logo-cyan: #087f9e;
+  --logo-blue: #245ecd;
+  --logo-ice: #159bac;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-logo--animated .orbit-logo__ring { animation: none; }
+}
+*{box-sizing:border-box}body{margin:0;background:#09111f;color:#edf6ff;font:16px system-ui;padding:48px}h1{font-size:32px;margin:0 0 12px}p{color:#9db0c4}main{max-width:1000px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin:32px 0}.card{background:#101d30;border:1px solid #25364b;border-radius:24px;padding:36px;text-align:center}.stage{height:230px;display:grid;place-items:center}.stage .orbit-logo{width:180px;height:180px;perspective:800px}.stage .orbit-logo__ring{inset:18px;border-width:7px}.stage img{width:210px}h2{font-size:18px}.light{background:#eff6fc;color:#142943}.brand{display:flex;align-items:center;justify-content:center;gap:12px;font-size:30px;font-weight:650}.brand small{font-size:12px;font-weight:400}a{color:#70deec}</style><main><h1>Orbit / identity</h1><p>Tiga orbit, tiga sumbu. Versi bergerak dan versi 2D transparan.</p><div class="grid"><section class="card"><div class="stage"><span class="orbit-logo orbit-logo--animated" aria-label="Animated Orbit logo"><span class="orbit-logo__ring orbit-logo__ring--one"></span><span class="orbit-logo__ring orbit-logo__ring--two"></span><span class="orbit-logo__ring orbit-logo__ring--three"></span></span></div><h2>Motion / 3 axes</h2><p>12s · 16s · 20s</p></section><section class="card"><div class="stage"><img src="orbit-logo-2d.svg" alt="Orbit 2D logo"></div><h2>2D / full color</h2><a href="orbit-logo-2d.svg" download>Download SVG</a></section><section class="card light"><div class="stage"><img src="orbit-logo-mono.svg" alt="Orbit monochrome logo"></div><h2>2D / monochrome</h2><a style="color:#245ecd" href="orbit-logo-mono.svg" download>Download SVG</a></section></div><div class="brand"><img src="orbit-logo-2d.svg" width="48" alt="">orbit <small>workspace</small></div></main></html>

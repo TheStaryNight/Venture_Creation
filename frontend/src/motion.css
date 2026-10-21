@@ -1,0 +1,730 @@
+/* ==========================================================================
+   ORBIT WORKSPACE — DESIGN LAYER (presentation only)
+   Satu lapisan terpadu: token, orbit background, tombol, kartu, tema.
+   Tidak mengubah logika, struktur routing, maupun event handler aplikasi.
+   ========================================================================== */
+
+/* ---------- Tokens ---------- */
+:root {
+  --fx-accent: var(--palette-4);
+  --fx-accent-soft: rgba(182, 84, 49, 0.12);
+  --fx-glow: rgba(182, 84, 49, 0.3);
+  --fx-primary-from: #c8673f;
+  --fx-primary-to: #b65431;
+  --fx-card: color-mix(in srgb, var(--surface) 94%, transparent);
+  --fx-shadow: 0 1px 2px rgba(20, 24, 40, 0.04), 0 8px 24px rgba(20, 24, 40, 0.06);
+  --fx-shadow-hover: 0 2px 4px rgba(20, 24, 40, 0.05), 0 16px 34px rgba(20, 24, 40, 0.11);
+  --fx-r-sm: 8px;
+  --fx-r-md: 14px;
+  --fx-r-lg: 18px;
+  --fx-fast: 160ms;
+  --fx-base: 260ms;
+  --fx-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --toast-bg: #2a2f3a;
+  --toast-fg: #fff;
+
+  --orbit-a: #d9774c;
+  --orbit-b: #8a7bd6;
+  --orbit-c: #3cb4e0;
+  --orbit-line-a: rgba(182, 84, 49, 0.22);
+  --orbit-line-b: rgba(129, 117, 178, 0.24);
+  --orbit-line-c: rgba(60, 160, 210, 0.22);
+  --orbit-wash-a: rgba(217, 119, 76, 0.1);
+  --orbit-wash-b: rgba(138, 123, 214, 0.1);
+}
+
+:root[data-theme='dark'] {
+  --fx-accent: #e0956f;
+  --fx-accent-soft: rgba(224, 149, 111, 0.16);
+  --fx-glow: rgba(224, 149, 111, 0.32);
+  --fx-primary-from: #b9623d;
+  --fx-primary-to: #9c4e2d;
+  --fx-card: color-mix(in srgb, var(--surface) 90%, transparent);
+  --fx-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 10px 28px rgba(0, 0, 0, 0.22);
+  --fx-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.3), 0 18px 38px rgba(0, 0, 0, 0.34);
+  --toast-bg: #2f3542;
+
+  --orbit-a: #e9a283;
+  --orbit-b: #a99cf0;
+  --orbit-c: #6fd4f2;
+  --orbit-line-a: rgba(233, 162, 131, 0.26);
+  --orbit-line-b: rgba(169, 156, 240, 0.28);
+  --orbit-line-c: rgba(111, 212, 242, 0.24);
+  --orbit-wash-a: rgba(233, 162, 131, 0.09);
+  --orbit-wash-b: rgba(169, 156, 240, 0.12);
+}
+
+/* ---------- Shell ---------- */
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  overflow-x: clip;
+}
+
+.main {
+  background: transparent;
+}
+
+.sidebar {
+  border-right-color: var(--border);
+}
+
+/* ---------- Orbit background ----------
+   Cincin berputar + titik cahaya yang benar-benar mengorbit.
+   Hanya memakai transform/opacity (dikomposit GPU), fixed, dan di-clip
+   sehingga tidak mengubah layout maupun memicu scroll horizontal. */
+.orbit-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.orbit-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.9;
+}
+
+.orbit-glow.a {
+  width: 46vmax;
+  height: 46vmax;
+  top: -22vmax;
+  right: -14vmax;
+  background: radial-gradient(circle, var(--orbit-wash-b), transparent 68%);
+}
+
+.orbit-glow.b {
+  width: 40vmax;
+  height: 40vmax;
+  bottom: -20vmax;
+  left: 4vmax;
+  background: radial-gradient(circle, var(--orbit-wash-a), transparent 68%);
+}
+
+.orbit-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--orbit-line-a);
+  will-change: transform;
+  animation: fx-orbit 60s linear infinite;
+}
+
+/* Cincin besar kanan-atas */
+.orbit-ring.r1 {
+  --ring-color: var(--orbit-a);
+  width: min(88vmin, 820px);
+  height: min(88vmin, 820px);
+  top: -22vmin;
+  right: -20vmin;
+  border-color: var(--orbit-line-a);
+  animation-duration: 70s;
+}
+
+/* Cincin elips ungu, berputar berlawanan arah */
+.orbit-ring.r2 {
+  --ring-color: var(--orbit-b);
+  width: min(64vmin, 600px);
+  height: min(40vmin, 380px);
+  top: 8vmin;
+  right: 2vmin;
+  border-color: var(--orbit-line-b);
+  animation-duration: 46s;
+  animation-direction: reverse;
+}
+
+/* Cincin cyan kiri-bawah */
+.orbit-ring.r3 {
+  --ring-color: var(--orbit-c);
+  width: min(72vmin, 680px);
+  height: min(72vmin, 680px);
+  bottom: -26vmin;
+  left: 12vmin;
+  border-color: var(--orbit-line-c);
+  animation-duration: 58s;
+}
+
+/* Cincin kecil pelengkap */
+.orbit-ring.r4 {
+  --ring-color: var(--orbit-b);
+  width: min(34vmin, 320px);
+  height: min(34vmin, 320px);
+  bottom: 12vmin;
+  right: 10vmin;
+  border-color: var(--orbit-line-b);
+  animation-duration: 30s;
+  animation-direction: reverse;
+}
+
+.orbit-dot {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: var(--ring-color, var(--orbit-a));
+  box-shadow:
+    0 0 10px 2px var(--ring-color, var(--orbit-a)),
+    0 0 26px 6px var(--orbit-line-a);
+}
+
+/* Titik kedua berada di sisi berlawanan jalur */
+.orbit-dot.b {
+  top: auto;
+  bottom: 0;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin: 0 0 -2.5px -2.5px;
+  opacity: 0.85;
+}
+
+/* Titik ketiga di sisi kiri jalur */
+.orbit-dot.c {
+  top: 50%;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  opacity: 0.8;
+}
+
+@keyframes fx-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Buttons: sistem animasi terpadu ----------
+   Selector :where() menjaga spesifisitas rendah agar class spesifik
+   (mis. .project-card) tetap bisa menimpa. */
+:where(button) {
+  transition:
+    transform var(--fx-fast) var(--fx-ease),
+    box-shadow var(--fx-base) ease,
+    background-color var(--fx-fast) ease,
+    border-color var(--fx-fast) ease,
+    color var(--fx-fast) ease,
+    opacity var(--fx-fast) ease;
+}
+
+.button,
+.new-work,
+.plan-entry,
+.workspace-switch,
+.topbar-connections {
+  border-radius: var(--fx-r-sm);
+}
+
+.button:hover:not(:disabled),
+.new-work:hover:not(:disabled),
+.plan-entry:hover:not(:disabled),
+.workspace-switch:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button:active:not(:disabled),
+.new-work:active:not(:disabled),
+.plan-entry:active:not(:disabled),
+.workspace-switch:active:not(:disabled),
+.icon-button:active:not(:disabled),
+.topbar-connections:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 80ms;
+}
+
+/* Primary */
+.button.primary,
+.new-work {
+  color: #fff;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, var(--fx-primary-from), var(--fx-primary-to));
+  box-shadow: 0 4px 14px var(--fx-glow);
+}
+
+.button.primary:hover:not(:disabled),
+.new-work:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--fx-primary-from), var(--fx-primary-to));
+  box-shadow: 0 8px 22px var(--fx-glow);
+  filter: brightness(1.06);
+}
+
+.new-work > span {
+  color: rgba(255, 255, 255, 0.8);
+  transition: transform var(--fx-fast) var(--fx-ease);
+}
+
+.new-work:hover:not(:disabled) > span {
+  transform: translate(2px, -2px);
+}
+
+/* Secondary */
+.button.secondary {
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(20, 24, 40, 0.05);
+}
+
+.button.secondary:hover:not(:disabled) {
+  background: var(--fx-accent-soft);
+  border-color: var(--fx-accent);
+  box-shadow:
+    0 6px 16px rgba(20, 24, 40, 0.08),
+    0 0 0 3px var(--fx-accent-soft);
+}
+
+/* Text & icon buttons */
+.text-button:hover:not(:disabled) {
+  color: var(--fx-accent);
+}
+
+.icon-button {
+  border-radius: var(--fx-r-sm);
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--fx-accent-soft);
+  color: var(--fx-accent);
+}
+
+.icon-button svg,
+.plan-entry svg,
+.workspace-switch > svg {
+  transition: transform var(--fx-base) var(--fx-ease);
+}
+
+.sidebar-section .icon-button:hover:not(:disabled) svg {
+  transform: rotate(90deg);
+}
+
+.dialog-heading .icon-button:hover:not(:disabled) svg {
+  transform: rotate(90deg) scale(1.05);
+}
+
+.plan-entry:hover:not(:disabled) svg {
+  transform: translate(2px, -2px);
+}
+
+.workspace-switch:hover:not(:disabled) > svg {
+  transform: translateY(2px);
+}
+
+.topbar-connections {
+  padding: 7px 11px;
+  border: 1px solid transparent;
+}
+
+.topbar-connections:hover:not(:disabled) {
+  background: var(--fx-accent-soft);
+  color: var(--fx-accent);
+  border-color: var(--border);
+}
+
+/* Navigasi */
+.nav-link {
+  border-radius: var(--fx-r-sm);
+}
+
+.nav-link:hover:not(:disabled) {
+  background: var(--fx-accent-soft);
+  transform: translateX(3px);
+}
+
+.nav-link.active {
+  background: var(--fx-accent-soft);
+  color: var(--foreground);
+  box-shadow: inset 3px 0 0 var(--fx-accent);
+}
+
+.brand:hover .brand-symbol {
+  transform: rotate(-8deg) scale(1.06);
+}
+
+.brand-symbol {
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--fx-primary-from), var(--fx-primary-to));
+  color: #fff;
+  padding: 5px;
+  box-shadow: 0 4px 14px var(--fx-glow);
+  transition: transform var(--fx-base) var(--fx-ease);
+}
+
+/* Disabled: tidak bergerak, tidak menyesatkan */
+button:disabled,
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: saturate(0.6);
+}
+
+/* Loading: tombol berisi spinner */
+button:has(> .spin) {
+  cursor: progress;
+}
+
+/* Overlay navigasi mobile tidak boleh ikut bergerak */
+.nav-shade {
+  transform: none;
+}
+
+/* Focus keyboard yang jelas */
+:where(button, a, summary, [role='button']):focus-visible {
+  outline: 2px solid var(--fx-accent);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px var(--fx-accent-soft);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--fx-accent);
+  outline-offset: 1px;
+  border-color: var(--fx-accent);
+}
+
+/* ---------- Theme toggle ---------- */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.theme-toggle {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.theme-toggle:hover:not(:disabled) {
+  border-color: var(--fx-accent);
+  box-shadow:
+    0 0 0 3px var(--fx-accent-soft),
+    0 6px 16px var(--fx-glow);
+}
+
+.theme-toggle svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  transition:
+    transform 420ms var(--fx-ease),
+    opacity 260ms ease;
+}
+
+/* Light → tampilkan matahari; Dark → tampilkan bulan */
+.theme-toggle .icon-moon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+
+:root[data-theme='dark'] .theme-toggle .icon-sun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
+}
+
+:root[data-theme='dark'] .theme-toggle .icon-moon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+.theme-toggle:hover:not(:disabled) .icon-sun {
+  transform: rotate(45deg);
+}
+
+:root[data-theme='dark'] .theme-toggle:hover:not(:disabled) .icon-moon {
+  transform: rotate(-18deg);
+}
+
+/* Transisi halus saat tema berganti (kelas dipasang sementara oleh App.tsx) */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition:
+    background-color 320ms ease,
+    color 320ms ease,
+    border-color 320ms ease,
+    box-shadow 320ms ease,
+    fill 320ms ease,
+    stroke 320ms ease !important;
+}
+
+/* ---------- Surfaces ---------- */
+.project-card,
+.connection-card,
+.task-panel,
+.settings-panel,
+.meeting-panel,
+.reminders-panel,
+.ai-connection,
+.account-columns section {
+  border-color: var(--border);
+  border-radius: var(--fx-r-md);
+  background: var(--fx-card);
+  box-shadow: var(--fx-shadow);
+}
+
+.project-card,
+.connection-card {
+  transition:
+    transform var(--fx-base) var(--fx-ease),
+    box-shadow var(--fx-base) ease,
+    border-color var(--fx-fast) ease;
+}
+
+.project-card:hover,
+.connection-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--fx-accent);
+  box-shadow: var(--fx-shadow-hover);
+}
+
+.project-card:active {
+  transform: translateY(-1px) scale(0.995);
+}
+
+.project-mark {
+  transition: transform var(--fx-base) var(--fx-ease);
+}
+
+.project-card:hover .project-mark {
+  transform: scale(1.06) rotate(-3deg);
+}
+
+.activity-row,
+.shortcut-list > button,
+.connected-list > button,
+.project-nav > button,
+.overview-metrics > button {
+  transition:
+    background-color var(--fx-fast) ease,
+    color var(--fx-fast) ease,
+    transform var(--fx-fast) var(--fx-ease);
+}
+
+.activity-row:hover {
+  transform: translateX(3px);
+}
+
+.shortcut-list > button:hover {
+  transform: translateY(-2px);
+}
+
+.progress-track > span {
+  transition: width 500ms var(--fx-ease);
+}
+
+.composer {
+  border-radius: var(--fx-r-lg);
+  background: var(--fx-card);
+  box-shadow: var(--fx-shadow);
+  transition:
+    border-color var(--fx-fast) ease,
+    box-shadow var(--fx-base) ease;
+}
+
+.composer:focus-within {
+  border-color: var(--fx-accent);
+  box-shadow:
+    var(--fx-shadow),
+    0 0 0 4px var(--fx-accent-soft);
+}
+
+input,
+select,
+textarea {
+  border-radius: var(--fx-r-sm);
+  transition:
+    border-color var(--fx-fast) ease,
+    box-shadow var(--fx-fast) ease,
+    background-color var(--fx-fast) ease;
+}
+
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: var(--fx-accent);
+}
+
+.page-title h1 {
+  letter-spacing: -0.045em;
+}
+
+.overline {
+  color: var(--fx-accent);
+}
+
+.banner {
+  border-radius: 10px;
+}
+
+/* Dialog: eksplisit mengikuti tema (default <dialog> memakai warna kanvas) */
+.dialog {
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--fx-r-lg);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.26);
+}
+
+.dialog[open] {
+  animation: fx-dialog-in 260ms var(--fx-ease) both;
+}
+
+.dialog[open]::backdrop {
+  animation: fx-fade-in 220ms ease both;
+}
+
+.toast {
+  background: var(--toast-bg);
+  color: var(--toast-fg);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  animation: fx-toast-in 320ms var(--fx-ease) both;
+}
+
+/* ---------- Entrance (satu momen per perpindahan halaman) ---------- */
+/* Page entry is driven by usePageTransition without remounting forms. */
+
+@keyframes fx-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fx-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fx-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fx-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 700px) {
+  .orbit-ring.r1 {
+    width: 120vw;
+    height: 120vw;
+    top: -30vw;
+    right: -50vw;
+  }
+
+  .orbit-ring.r2 {
+    width: 90vw;
+    height: 56vw;
+    top: 10vw;
+    right: -18vw;
+  }
+
+  .orbit-ring.r3 {
+    width: 100vw;
+    height: 100vw;
+    bottom: -40vw;
+    left: -20vw;
+  }
+
+  .orbit-ring.r4 {
+    display: none;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  .project-card:hover,
+  .connection-card:hover,
+  .nav-link:hover:not(:disabled),
+  .activity-row:hover {
+    transform: none;
+  }
+}
+
+/* Perangkat sentuh: hover tidak boleh "menempel" setelah tap */
+@media (hover: none) {
+  .button:hover:not(:disabled),
+  .new-work:hover:not(:disabled),
+  .plan-entry:hover:not(:disabled),
+  .workspace-switch:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .orbit-ring {
+    animation: none;
+    will-change: auto;
+  }
+
+  .page-content,
+  .dialog[open],
+  .dialog[open]::backdrop,
+  .toast {
+    animation: none;
+  }
+
+  .theme-toggle svg {
+    transition: none;
+  }
+}
+
+/* Panel konteks tetap kolom terbuka (bukan kartu), seperti desain asli */
+.context-panel {
+  border-left-color: var(--border);
+}
+/* Honor reduced motion even during the temporary theme transition. */
+@media (prefers-reduced-motion: reduce) {
+  html.theme-switching *,
+  html.theme-switching *::before,
+  html.theme-switching *::after {
+    transition: none !important;
+  }
+}

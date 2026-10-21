@@ -11,7 +11,7 @@ export function ProjectPage() {
     <>
       <PageHeading
         title={project.name}
-        subtitle={project.description || t('Atur pekerjaan dan kebutuhan proyek ini.')}
+        subtitle={project.description || t('Atur pekerjaan dan kebutuhan project ini.')}
         action={
           <span className="deadline-label">
             <CalendarDays size={15} />
@@ -29,7 +29,7 @@ export function ProjectPage() {
             </span>
           </div>
           {!project.tasks.length && (
-            <p className="task-empty">{t('Tambahkan pekerjaan pertama untuk proyek ini.')}</p>
+            <p className="task-empty">{t('Tambahkan pekerjaan pertama untuk project ini.')}</p>
           )}
           <div className="task-list">
             {project.tasks.map((task) => (

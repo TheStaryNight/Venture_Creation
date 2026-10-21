@@ -11,7 +11,7 @@ export function ActivityPage() {
   return (
     <>
       <PageHeading
-        title={t('Aktivitas')}
+        title={t('Percakapan')}
         subtitle={t('Periksa langkah, persetujuan, dan hasil pekerjaan.')}
         action={
           <button className="button secondary" onClick={() => void refresh()}>

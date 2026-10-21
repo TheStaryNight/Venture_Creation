@@ -8,6 +8,7 @@ import {
   Folder,
   LoaderCircle,
   Plus,
+  Trash2,
 } from 'lucide-react';
 import { type ReactNode } from 'react';
 import { useAppContext } from '../app/AppContext';
@@ -97,32 +98,41 @@ export function WorkflowComposer() {
   );
 }
 export function ActivityList({ items }: { items: Workflow[] }) {
-  const { setActive, setError, search, filter } = useAppContext();
+  const { setActive, setError, search, filter, requestDeletion } = useAppContext();
   return items.length ? (
     <div className="activity-list">
       {items.map((w) => (
-        <button
-          className="activity-row"
-          key={w.id}
-          onClick={() => {
-            setError('');
-            setActive(w);
-          }}
-        >
-          <span className="activity-icon">
-            {w.status === 'completed' ? <CircleCheck size={18} /> : <FileText size={18} />}
-          </span>
-          <div className="activity-text">
-            <strong>{w.prompt}</strong>
-            <span>
-              {dateLabel(w.createdAt)} · {w.steps.length}
-              {t('langkah')}
-              {w.mode === 'demo' ? t(' · Uji coba') : ''}
+        <div className="deletable-row" key={w.id}>
+          <button
+            className="activity-row"
+            onClick={() => {
+              setError('');
+              setActive(w);
+            }}
+          >
+            <span className="activity-icon">
+              {w.status === 'completed' ? <CircleCheck size={18} /> : <FileText size={18} />}
             </span>
-          </div>
-          <span className={'status ' + w.status}>{t(statuses[w.status])}</span>
-          <ChevronRight size={16} />
-        </button>
+            <div className="activity-text">
+              <strong>{w.prompt}</strong>
+              <span>
+                {dateLabel(w.createdAt)} · {w.steps.length}
+                {t('langkah')}
+                {w.mode === 'demo' ? t(' · Uji coba') : ''}
+              </span>
+            </div>
+            <span className={'status ' + w.status}>{t(statuses[w.status])}</span>
+            <ChevronRight size={16} />
+          </button>
+          <button
+            className="icon-button delete-item"
+            aria-label={t('Hapus percakapan') + ': ' + w.prompt}
+            disabled={['queued', 'running'].includes(w.status)}
+            onClick={() => requestDeletion('conversation', w.id, w.prompt)}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       ))}
     </div>
   ) : (
@@ -130,7 +140,7 @@ export function ActivityList({ items }: { items: Workflow[] }) {
       <Clock3 size={24} />
       <div>
         <strong>
-          {t('Belum ada aktivitas')}
+          {t('Belum ada percakapan')}
           {search || filter !== 'all' ? ' yang cocok' : ''}
         </strong>
         <p>
@@ -143,34 +153,43 @@ export function ActivityList({ items }: { items: Workflow[] }) {
   );
 }
 export function ProjectCards({ items }: { items: Project[] }) {
-  const { setShowProject, openProject } = useAppContext();
+  const { setShowProject, openProject, requestDeletion } = useAppContext();
   return items.length ? (
     <div className="project-grid">
       {items.map((p, i) => {
         const done = p.tasks.filter((t) => t.done).length;
         return (
-          <button className="project-card" onClick={() => openProject(p.id)} key={p.id}>
-            <div className="project-card-top">
-              <span className={'project-mark color-' + (i % 4)}>
-                <Folder size={19} />
-              </span>
-              <ArrowUpRight size={16} />
-            </div>
-            <h3>{p.name}</h3>
-            <p>{p.description || t('Tambahkan pekerjaan dan atur kebutuhan proyek.')}</p>
-            <div className="progress-track">
-              <span
-                style={{ width: p.tasks.length ? `${(done / p.tasks.length) * 100}%` : '0%' }}
-              />
-            </div>
-            <div className="project-card-bottom">
-              <span>
-                {done}/{p.tasks.length}
-                {t('tugas selesai')}
-              </span>
-              <span>{p.deadline ? dateLabel(p.deadline + 'T12:00:00') : t('Tanpa tenggat')}</span>
-            </div>
-          </button>
+          <div className="deletable-project" key={p.id}>
+            <button className="project-card" onClick={() => openProject(p.id)}>
+              <div className="project-card-top">
+                <span className={'project-mark color-' + (i % 4)}>
+                  <Folder size={19} />
+                </span>
+                <ArrowUpRight size={16} />
+              </div>
+              <h3>{p.name}</h3>
+              <p>{p.description || t('Tambahkan pekerjaan dan atur kebutuhan project.')}</p>
+              <div className="progress-track">
+                <span
+                  style={{ width: p.tasks.length ? `${(done / p.tasks.length) * 100}%` : '0%' }}
+                />
+              </div>
+              <div className="project-card-bottom">
+                <span>
+                  {done}/{p.tasks.length}
+                  {t('tugas selesai')}
+                </span>
+                <span>{p.deadline ? dateLabel(p.deadline + 'T12:00:00') : t('Tanpa tenggat')}</span>
+              </div>
+            </button>
+            <button
+              className="icon-button delete-item"
+              aria-label={t('Hapus project') + ': ' + p.name}
+              onClick={() => requestDeletion('project', p.id, p.name)}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         );
       })}
     </div>
@@ -180,7 +199,7 @@ export function ProjectCards({ items }: { items: Project[] }) {
         <Plus size={23} />
       </span>
       <div>
-        <strong>{t('Buat proyek pertama')}</strong>
+        <strong>{t('Buat project pertama')}</strong>
         <p>{t('Kumpulkan checklist dan instruksi untuk satu tujuan.')}</p>
       </div>
       <ArrowRight size={18} />
@@ -213,7 +232,7 @@ export function NewProjectButton() {
   return (
     <button className="button secondary" onClick={() => setShowProject(true)}>
       <Plus size={16} />
-      {t('Proyek baru')}
+      {t('Project baru')}
     </button>
   );
 }
