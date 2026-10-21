@@ -46,6 +46,8 @@ app.MapGet("/api/connections", (IConfiguration config, HttpContext context, Goog
     googleConfigured = GoogleConnection.Configured(config),
     ai = AiSettings.Read(config).Ready, aiProvider = AiSettings.Read(config).Provider,
     services = new[] {
+        new { id = "gmail", name = "Gmail", connected = google.HasScope(context, GoogleConnection.GmailScope), detail = "Draft dan kirim email setelah persetujuan" },
+        new { id = "docs", name = "Google Docs", connected = google.HasScope(context, GoogleConnection.DriveScope), detail = "Buat dokumen berisi teks" },
         new { id = "drive", name = "Google Drive", connected = google.HasScope(context, GoogleConnection.DriveScope), detail = "Membuat folder di My Drive" },
         new { id = "calendar", name = "Google Calendar", connected = google.HasScope(context, GoogleConnection.CalendarScope), detail = "Membuat event di kalender utama" },
         new { id = "meet", name = "Google Meet", connected = google.HasScope(context, GoogleConnection.CalendarScope), detail = "Tautan meeting melalui Google Calendar" },
@@ -89,10 +91,10 @@ app.MapPost("/api/workflows/plan", async (PlanRequest request, WorkflowStore sto
             new("discord", "Bagikan rangkuman", "Contoh: kirim rangkuman persiapan proyek ke channel kelompok.")
         ];
     }
-    if (steps.Count is < 1 or > 5 || steps.Any(s => s.Agent is not ("drive" or "calendar" or "discord") || string.IsNullOrWhiteSpace(s.Title) || string.IsNullOrWhiteSpace(s.Detail)))
+    if (steps.Count is < 1 or > 5 || steps.Any(s => s.Agent is not ("drive" or "calendar" or "discord" or "docs" or "gmail") || string.IsNullOrWhiteSpace(s.Title) || string.IsNullOrWhiteSpace(s.Detail)))
         return Results.BadRequest(new { error = "Belum ada langkah yang bisa dijalankan. Sebutkan tindakan, judul meeting, tanggal, serta jam mulai dan selesai." });
     if (source == "ai" && PlanContract.Validate(steps) is string validation) return Results.BadRequest(new { error = validation });
-    foreach (var step in steps.Where(s => s.Agent == "calendar"))
+    foreach (var step in steps.Where(s => s.Agent is "calendar" or "gmail"))
         AccountFeatures.Resolve(step, database.ReadAccount(AccountFeatures.Owner(context)), request.Prompt);
     if (steps.Any(s => s.Attendees.Length > 200)) return Results.BadRequest(new { error = "Maksimal 200 peserta per meeting." });
     if (request.Mode == "live") {
@@ -100,7 +102,8 @@ app.MapPost("/api/workflows/plan", async (PlanRequest request, WorkflowStore sto
             return Results.BadRequest(new { error = "Reminder terjadwal membutuhkan database." });
         if (access.Blocks(steps, context.User.FindFirstValue("orbit_google_connection"))) return FeatureAccess.UpgradeRequired();
         if (steps.Any(s => s.Agent == "discord" || s.ReminderMinutes is not null) && !Webhook.IsValid(database.Enabled ? database.ReadConnection<string>(context.User.FindFirstValue("orbit_google_connection")!, "discord") : config["Discord:WebhookUrl"])) return Results.BadRequest(new { error = "Konfigurasi webhook Discord belum valid." });
-        if (steps.Any(s => s.Agent == "drive") && !google.HasScope(context, GoogleConnection.DriveScope)) return Results.BadRequest(new { error = "Hubungkan akun Google dan berikan izin Drive terlebih dahulu." });
+        if (steps.Any(s => s.Agent is "drive" or "docs") && !google.HasScope(context, GoogleConnection.DriveScope)) return Results.BadRequest(new { error = "Hubungkan akun Google dan berikan izin Drive terlebih dahulu." });
+        if (steps.Any(s => s.Agent == "gmail") && !google.HasScope(context, GoogleConnection.GmailScope)) return Results.BadRequest(new { error = "Hubungkan ulang Google dan izinkan Gmail terlebih dahulu." });
         if (steps.Any(s => s.Agent == "calendar") && !google.HasScope(context, GoogleConnection.CalendarScope)) return Results.BadRequest(new { error = "Hubungkan akun Google dan berikan izin Calendar terlebih dahulu." });
     }
     var workflow = new Workflow(request.Prompt.Trim(), request.Mode, source, steps) { Owner = context.User.FindFirstValue("orbit_google_connection"), Language = database.ReadAccount(AccountFeatures.Owner(context)).Preferences.Language, TimeZone = database.ReadAccount(AccountFeatures.Owner(context)).Preferences.TimeZone };
@@ -117,6 +120,8 @@ app.MapPost("/api/workflows/{id:guid}/execute", (Guid id, ExecuteRequest request
             return Results.BadRequest(new { error = "Konfirmasi pembuatan folder baru. Untuk folder yang sudah ada, susun ulang instruksi dengan gunakan folder lama." });
         if (workflow.Steps.Any(s => s.Agent == "drive" && (s.Action is not ("create_folder" or "use_existing_folder" or "list_folder_files") || (s.Action != "create_folder" && string.IsNullOrEmpty(s.FolderId)))))
             return Results.BadRequest(new { error = "Pilih folder untuk setiap langkah Drive yang memakai folder lama. Rencana lama tanpa jenis tindakan harus disusun ulang." });
+        if (workflow.Steps.Any(s => s.Agent == "docs" && s.Action == "create_document_in_folder" && string.IsNullOrEmpty(s.FolderId))) return Results.BadRequest(new { error = "Pilih folder tujuan dokumen terlebih dahulu." });
+        if (workflow.Steps.Any(s => s.Agent == "gmail" && s.Attendees.Length == 0)) return Results.BadRequest(new { error = "Tentukan penerima email terlebih dahulu." });
         if (workflow.Steps.Any(s => s.RecipientIssues.Length > 0)) return Results.BadRequest(new { error = "Lengkapi atau pilih peserta meeting terlebih dahulu." });
         if (workflow.Steps.Any(s => s.Agent == "calendar" && DateTimeOffset.TryParse(s.Start, out var date) && date <= DateTimeOffset.UtcNow)) return Results.BadRequest(new { error = "Waktu meeting sudah lewat. Susun ulang dengan tanggal yang akan datang." });
         workflow.Status = "queued";
@@ -206,7 +211,7 @@ sealed class WorkflowWorker(WorkflowStore store, IHttpClientFactory clients, ICo
                     if (workflow.Mode == "demo") {
                         await Task.Delay(900, stoppingToken);
                         result = "Simulasi selesai. Tidak ada data yang dibuat atau pesan yang dikirim ke layanan.";
-                    } else if (step.Agent is "drive" or "calendar") {
+                    } else if (step.Agent is "drive" or "calendar" or "docs" or "gmail") {
                         if (database?.Enabled != true && access.Blocks([step], workflow.Owner)) throw new ActionFailure("Integrasi Google memerlukan Orbit Pro.");
                         var output = await GoogleActions.Execute(step, workflow.Owner, google, clients.CreateClient("external"), stoppingToken);
                         result = output.Message;

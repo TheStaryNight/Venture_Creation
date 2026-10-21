@@ -6,6 +6,8 @@ export type Connection = { id: string; name: string; connected: boolean };
 export type Project = { id: string; name: string; description: string; deadline: string; tasks: { id: string; title: string; done: boolean }[]; draft: string };
 export const statuses: Record<string, string> = { planned: 'Perlu persetujuan', queued: 'Dalam antrean', running: 'Berjalan', completed: 'Selesai', failed: 'Perlu diperiksa', pending: 'Menunggu', skipped: 'Dilewati' };
 export const services = [
+  { id: 'gmail', name: 'Gmail', action: 'Draft & kirim email', description: 'Tinjau penerima dan isi email sebelum dikirim.', available: true },
+  { id: 'docs', name: 'Google Docs', action: 'Dokumen baru', description: 'Buat dokumen berisi teks di Google Drive.', available: true },
   { id: 'drive', name: 'Google Drive', action: 'Folder proyek', description: 'Simpan dokumen proyek dalam satu tempat.', available: true },
   { id: 'calendar', name: 'Google Calendar', action: 'Jadwal pertemuan', description: 'Buat jadwal diskusi dari instruksi pekerjaan.', available: true },
   { id: 'meet', name: 'Google Meet', action: 'Tautan rapat video', description: 'Buat tautan Meet bersama jadwal di Google Calendar.', available: true },
@@ -13,8 +15,8 @@ export const services = [
 ];
 export type Billing = { plan: string; developmentAccess: boolean; simulationAccess: boolean; checkoutEnabled: boolean; trialAccess?: boolean; trialAvailable?: boolean; trialEndsAt?: string; trialRemaining?: number; plansRemaining?: number; monthlyPrice: number; currency: string };
 export class ApiError extends Error { constructor(message: string, public code?: string) { super(message); } }
-export async function api<T>(path: string, body?: object): Promise<T> {
-  const response = await fetch('/api' + path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Orbit-Request': '1' }, body: JSON.stringify(body) } : undefined);
+export async function api<T>(path: string, body?: object, signal?: AbortSignal): Promise<T> {
+  const response = await fetch('/api' + path, body ? { signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Orbit-Request': '1' }, body: JSON.stringify(body) } : { signal });
   if (!response.ok) { const result = await response.json().catch(() => ({})); throw new ApiError(t(result.error || result.title || 'Permintaan belum berhasil. Coba lagi.'), result.code); }
   return response.json();
 }

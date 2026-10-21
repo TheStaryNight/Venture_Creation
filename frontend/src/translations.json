@@ -287,5 +287,15 @@
   "Trial Pro aktif sampai": "Pro trial active until",
   "workflow Google tersisa": "Google workflows remaining",
   "Sisa kuota penyusunan AI bulan ini:": "AI plans remaining this month:",
-  "Workflow yang disetujui mengurangi kuota trial, termasuk jika layanan gagal setelah pekerjaan dimulai.": "Approved workflows count toward the trial quota, including when a service fails after work starts."
+  "Workflow yang disetujui mengurangi kuota trial, termasuk jika layanan gagal setelah pekerjaan dimulai.": "Approved workflows count toward the trial quota, including when a service fails after work starts.",
+  "Draft & kirim email": "Draft & send email",
+  "Tinjau penerima dan isi email sebelum dikirim.": "Review recipients and content before sending.",
+  "Dokumen baru": "New document",
+  "Buat dokumen berisi teks di Google Drive.": "Create a text document in Google Drive.",
+  "Subjek email": "Email subject",
+  "Judul dokumen": "Document title",
+  "Simpan di folder pilihan": "Save in the selected folder",
+  "Simpan di My Drive": "Save in My Drive",
+  "Simpan draft — belum dikirim": "Save draft — not sent",
+  "Kirim email setelah persetujuan": "Send email after approval"
 }

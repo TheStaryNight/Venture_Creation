@@ -70,9 +70,9 @@ static class AccountFeatures {
             if (!store.Items.TryGetValue(id, out var w) || w.Owner != c.User.FindFirstValue("orbit_google_connection")) return Results.NotFound();
             lock (w.Sync) {
                 if (w.Status != "planned") return Results.Conflict(new { error = "Meeting ini sudah disetujui." });
-                var s = w.Steps.FirstOrDefault(s => s.Id == stepId && s.Agent == "calendar");
+                var s = w.Steps.FirstOrDefault(s => s.Id == stepId && s.Agent is "calendar" or "gmail");
                 if (s is null) return Results.NotFound();
-                if (input.ReminderMinutes is < 0 or > 10080) return Results.BadRequest(new { error = "Reminder harus antara 0 dan 10.080 menit sebelum meeting." });
+                if ((s.Agent == "gmail" && input.ReminderMinutes is not null) || input.ReminderMinutes is < 0 or > 10080) return Results.BadRequest(new { error = "Reminder harus antara 0 dan 10.080 menit sebelum meeting." });
                 var selected = new List<string>(s.Attendees);
                 var remaining = new List<RecipientIssue>();
                 foreach (var issue in s.RecipientIssues) {

@@ -4,7 +4,7 @@ import { api, type Step, type Workflow } from './data';
 
 type Folder = { id: string; name: string; modifiedTime?: string };
 export function DriveFolderPicker({ step, workflowId, loginUrl, selected }: { step: Step; workflowId: string; loginUrl: string; selected: (workflow: Workflow) => void }) {
-  const [search, setSearch] = useState(step.name || '');
+  const [search, setSearch] = useState(step.agent === 'docs' ? '' : step.name || '');
   const [folders, setFolders] = useState<Folder[]>([]);
   const [next, setNext] = useState<string | null>(null);
   const [query, setQuery] = useState('');

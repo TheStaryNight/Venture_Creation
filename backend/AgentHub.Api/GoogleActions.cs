@@ -3,6 +3,7 @@ using System.Text.Json;
 
 static class GoogleActions {
     public static async Task<(string Message, string Url, string? MeetUrl)> Execute(Step step, string? connectionId, GoogleTokenStore store, HttpClient client, CancellationToken ct) {
+        if (step.Agent is "gmail" or "docs") return await GoogleWorkspaceActions.Execute(step, connectionId, store, client, ct);
         if (step.Agent == "drive") {
             if (step.Action is "use_existing_folder" or "list_folder_files") return await DriveFolders.Execute(step, connectionId, store, client, ct);
             if (step.Action != "create_folder") throw new ActionFailure("Rencana Drive lama harus disusun ulang agar tindakan jelas.");

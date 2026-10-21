@@ -24,7 +24,7 @@ static class DriveFolders {
             var owner = context.User.FindFirstValue("orbit_google_connection");
             if (owner is null) return Results.Unauthorized();
             if (!workflows.Items.TryGetValue(id, out var workflow) || workflow.Owner != owner) return Results.NotFound();
-            var step = workflow.Steps.FirstOrDefault(s => s.Id == stepId && s.Agent == "drive" && s.Action is "use_existing_folder" or "list_folder_files");
+            var step = workflow.Steps.FirstOrDefault(s => s.Id == stepId && ((s.Agent == "drive" && s.Action is "use_existing_folder" or "list_folder_files") || (s.Agent == "docs" && s.Action == "create_document_in_folder")));
             if (step is null) return Results.BadRequest(new { error = "Langkah ini tidak memakai folder lama." });
             try {
                 var client = clients.CreateClient("external");

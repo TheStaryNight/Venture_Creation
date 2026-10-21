@@ -9,6 +9,7 @@ export function ContactsPanel() {
   const [contacts, setContacts] = useState<Contact[]>([]); const [groups, setGroups] = useState<Group[]>([]);
   const [contact, setContact] = useState<Contact>({ id: emptyId, name: '', email: '' });
   const [group, setGroup] = useState<Group>({ id: emptyId, name: '', members: [] });
+  const [memberSearch, setMemberSearch] = useState('');
   const [search, setSearch] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
   async function load() { const [c, g] = await Promise.all([api<Contact[]>('/contacts'), api<Group[]>('/groups')]); setContacts(c); setGroups(g); }
   useEffect(() => { void load().catch(e => setError(e.message)); }, []);
@@ -26,9 +27,15 @@ export function ContactsPanel() {
       {contacts.filter(c => (c.name + c.email).toLowerCase().includes(search.toLowerCase())).map(c => <div className="account-row" key={c.id}><div><strong>{c.name}</strong><p>{c.email}</p></div><button disabled={busy} onClick={() => setContact(c)}>{en ? 'Edit' : 'Edit'}</button><button disabled={busy} onClick={() => { if (confirm(en ? `Delete ${c.name}? They will also be removed from groups.` : `Hapus ${c.name}? Kontak ini juga akan dikeluarkan dari grup.`)) void act(`/contacts/${c.id}/delete`, {}); }}>{en ? 'Delete' : 'Hapus'}</button></div>)}
       {!contacts.length && <p>{en ? 'No contacts yet. Add your first teammate above.' : 'Belum ada kontak. Tambahkan teman timmu di atas.'}</p>}
     </section><section><h2>{en ? 'Groups' : 'Grup'}</h2>
-      <form onSubmit={e => { e.preventDefault(); void act('/groups', group, () => setGroup({ id: emptyId, name: '', members: [] })); }}>
+      <form onSubmit={e => { e.preventDefault(); void act('/groups', group, () => { setGroup({ id: emptyId, name: '', members: [] }); setMemberSearch(''); }); }}>
         <label>{en ? 'Group name' : 'Nama grup'}<input required maxLength={100} value={group.name} onChange={e => setGroup({ ...group, name: e.target.value })}/></label>
-        <fieldset><legend>{en ? 'Members' : 'Anggota'}</legend>{contacts.map(c => <label className="check-label" key={c.id}><input type="checkbox" checked={group.members.includes(c.id)} onChange={e => setGroup({ ...group, members: e.target.checked ? [...group.members, c.id] : group.members.filter(id => id !== c.id) })}/>{c.name} — {c.email}</label>)}</fieldset>
+        <fieldset className="member-picker"><legend>{en ? 'Members' : 'Anggota'}</legend>
+          <input type="search" aria-label={en ? 'Find group members' : 'Cari anggota grup'} placeholder={en ? 'Type a contact name or email' : 'Ketik nama atau email kontak'} value={memberSearch} onChange={e => setMemberSearch(e.target.value)}/>
+          <p className="member-help">{contacts.length ? (en ? 'Select contacts to add them to this group.' : 'Centang kontak yang mau dimasukkan ke grup.') : (en ? 'Save a contact in the Contacts form first. They will appear here for selection.' : 'Simpan nama dan email di bagian Kontak dulu. Setelah itu, pilih kontaknya di sini.')}</p>
+          <div className="member-list">{contacts.filter(c => (c.name + ' ' + c.email).toLowerCase().includes(memberSearch.toLowerCase())).map(c => <label className="member-option" key={c.id}><input type="checkbox" disabled={busy} checked={group.members.includes(c.id)} onChange={e => { const checked = e.target.checked; setGroup(g => ({ ...g, members: checked ? [...g.members, c.id] : g.members.filter(id => id !== c.id) })); }}/><span><strong>{c.name}</strong><small>{c.email}</small></span></label>)}</div>
+          {contacts.length > 0 && !contacts.some(c => (c.name + ' ' + c.email).toLowerCase().includes(memberSearch.toLowerCase())) && <p>{en ? 'No matching contacts.' : 'Kontak tidak ditemukan. Coba nama atau email lain.'}</p>}
+          <span className="member-count">{group.members.length} {en ? 'selected' : 'anggota dipilih'}</span>
+        </fieldset>
         <button className="button primary" disabled={busy}>{en ? 'Save group' : 'Simpan grup'}</button>
         {group.id !== emptyId && <button type="button" className="button secondary" onClick={() => setGroup({ id: emptyId, name: '', members: [] })}>{en ? 'Cancel edit' : 'Batal edit'}</button>}
       </form>

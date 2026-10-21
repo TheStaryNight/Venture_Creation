@@ -74,7 +74,7 @@ sealed partial class OrbitDatabase : IDisposable {
         if (source is null) return true;
         using var connection = source.OpenConnection();
         using var tx = connection.BeginTransaction();
-        if (workflow.Mode == "live" && workflow.Steps.Any(s => s.Agent is "drive" or "calendar")) {
+        if (workflow.Mode == "live" && workflow.Steps.Any(s => s.Agent is "drive" or "calendar" or "docs" or "gmail")) {
             using var reserve = new NpgsqlCommand("update orbit.workspaces set trial_workflows=trial_workflows+1 where owner_id=@owner and trial_started_at + interval '7 days'>now() and trial_workflows<10 returning trial_workflows", connection, tx);
             reserve.Parameters.AddWithValue("owner", workflow.Owner!);
             if (reserve.ExecuteScalar() is null) return false;
