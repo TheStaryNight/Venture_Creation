@@ -14,10 +14,10 @@ export const services = [
   { id: 'discord', name: 'Discord', action: 'Pesan ke kelompok', description: 'Kirim pembagian tugas dan update ke channel kelompok.', available: true },
 ];
 export type Billing = { plan: string; developmentAccess: boolean; simulationAccess: boolean; checkoutEnabled: boolean; trialAccess?: boolean; trialAvailable?: boolean; trialEndsAt?: string; trialRemaining?: number; plansRemaining?: number; monthlyPrice: number; currency: string };
-export class ApiError extends Error { constructor(message: string, public code?: string) { super(message); } }
+export class ApiError extends Error { constructor(message: string, public code?: string, public status?: number) { super(message); } }
 export async function api<T>(path: string, body?: object, signal?: AbortSignal): Promise<T> {
   const response = await fetch('/api' + path, body ? { signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Orbit-Request': '1' }, body: JSON.stringify(body) } : { signal });
-  if (!response.ok) { const result = await response.json().catch(() => ({})); throw new ApiError(t(result.error || result.title || 'Permintaan belum berhasil. Coba lagi.'), result.code); }
+  if (!response.ok) { const result = await response.json().catch(() => ({})); throw new ApiError(t(result.error || result.title || 'Permintaan belum berhasil. Coba lagi.'), result.code, response.status); }
   return response.json();
 }
 export function useStored<T>(key: string, initial: T): [T, (value: T) => void] {
