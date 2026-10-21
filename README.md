@@ -1,5 +1,7 @@
 # Orbit — AI Agent Hub
 
+Panduan struktur kode dan pemeriksaan sebelum commit: [Engineering guide](docs/engineering-guide.md).
+
 **Koneksi akun Google:** [panduan OAuth lokal](docs/GOOGLE.md). Login, pembuatan folder/event, dan penerusan tautan ke Discord tersedia.
 
 **Gemini / Google AI Studio sudah didukung.** Lihat [panduan Gemini](docs/GEMINI.md) untuk konfigurasi provider dan key.

@@ -5,4 +5,14 @@ import { PreferencesProvider } from './Preferences';
 import { SessionGate } from './WorkspaceSession';
 import './style.css';
 import './theme.css';
-createRoot(document.getElementById('root')!).render(<React.StrictMode><SessionGate>{bootstrap => <PreferencesProvider key={bootstrap.owner} owner={bootstrap.owner}><App bootstrap={bootstrap}/></PreferencesProvider>}</SessionGate></React.StrictMode>);
+createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <SessionGate>
+      {(bootstrap) => (
+        <PreferencesProvider key={bootstrap.owner} owner={bootstrap.owner}>
+          <App bootstrap={bootstrap} />
+        </PreferencesProvider>
+      )}
+    </SessionGate>
+  </React.StrictMode>,
+);

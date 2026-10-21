@@ -1,462 +1,760 @@
-:root { color-scheme:light; --surface:#fff; --foreground:#30343b; --border:#dde1e7; --paper:#fff; --ink:#000;
---palette-0:#292a2d;
---palette-1:#fff;
---palette-2:#777b83;
---palette-3:#e9e9ec;
---palette-4:#b65431;
---palette-5:#d7b2a2;
---palette-6:#f8f8f9;
---palette-7:#37383d;
---palette-8:#93969b;
---palette-9:#e4e4e7;
---palette-10:#858990;
---palette-11:#ece8e3;
---palette-12:#e2ddd7;
---palette-13:#777064;
---palette-14:#292a2e;
---palette-15:#414249;
---palette-16:#a6a7af;
---palette-17:#747780;
---palette-18:#eeeef0;
---palette-19:#eeece9;
---palette-20:#3a3835;
---palette-21:#ac6345;
---palette-22:#95908b;
---palette-23:#999ba2;
---palette-24:#848790;
---palette-25:#eaeaec;
---palette-26:#35363b;
---palette-27:#9699a0;
---palette-28:#71747b;
---palette-29:#ededf0;
---palette-30:#d1bbab;
---palette-31:#8d6952;
---palette-32:#b2becd;
---palette-33:#596e8a;
---palette-34:#b7c1b2;
---palette-35:#60735a;
---palette-36:#c1b4c6;
---palette-37:#7c6287;
---palette-38:#90949a;
---palette-39:#bfc1c7;
---palette-40:#6b9175;
---palette-41:#c77663;
---palette-42:#b59454;
---palette-43:#e5e5e8;
---palette-44:#9599a1;
---palette-45:#eee2d9;
---palette-46:#e1d2c6;
---palette-47:#846049;
---palette-48:#989ba1;
---palette-49:#555860;
---palette-50:#80858b;
---palette-51:#92959c;
---palette-52:#83878e;
---palette-53:#303137;
---palette-54:#484950;
---palette-55:#60636b;
---palette-56:#dedfe3;
---palette-57:#00000004;
---palette-58:#fafafa;
---palette-59:#8b8e95;
---palette-60:#a4a7af;
---palette-61:#20202504;
---palette-62:#777c85;
---palette-63:#42454c;
---palette-64:#a1a4aa;
---palette-65:#b6a394;
---palette-66:#b6a39415;
---palette-67:#9a9da5;
---palette-68:#e4e6e8;
---palette-69:#729077;
---palette-70:#7292b9;
---palette-71:#8175b2;
---palette-72:#efeff1;
---palette-73:#fcfcfc;
---palette-74:#999da5;
---palette-75:#7e8289;
---palette-76:#88857e;
---palette-77:#9b644b;
---palette-78:#82858d;
---palette-79:#e6e7ea;
---palette-80:#f6f6f7;
---palette-81:#c9cace;
---palette-82:#aaadb4;
---palette-83:#92969d;
---palette-84:#898d95;
---palette-85:#33343a;
---palette-86:#e2e3e6;
---palette-87:#b7b9c0;
---palette-88:#fdfdfd;
---palette-89:#acaeb5;
---palette-90:#f2e9e1;
---palette-91:#edf0f5;
---palette-92:#edf2ea;
---palette-93:#f1eaf5;
---palette-94:#90949c;
---palette-95:#f0f0f2;
---palette-96:#a48b77;
---palette-97:#92969e;
---palette-98:#dadce0;
---palette-99:#fcfcfd;
---palette-100:#f7f7f9;
---palette-101:#656972;
---palette-102:#969aa2;
---palette-103:#e6e7eb;
---palette-104:#a0a4ac;
---palette-105:#f5f5f6;
---palette-106:#e9e9ed;
---palette-107:#a7abb2;
---palette-108:#838995;
---palette-109:#f1f2f4;
---palette-110:#edf3ef;
---palette-111:#63806c;
---palette-112:#a28753;
---palette-113:#f8f3e8;
---palette-114:#faefeb;
---palette-115:#b5755f;
---palette-116:#eef2f8;
---palette-117:#6d86ae;
---palette-118:#9da2ac;
---palette-119:#777d87;
---palette-120:#9ca0a9;
---palette-121:#979aa2;
---palette-122:#969ba5;
---palette-123:#adb1b9;
---palette-124:#858b94;
---palette-125:#a3a8b2;
---palette-126:#faf8f5;
---palette-127:#eee9e2;
---palette-128:#ab8f77;
---palette-129:#776d60;
---palette-130:#a49b90;
---palette-131:#9398a1;
---palette-132:#dedfe4;
---palette-133:#959ba5;
---palette-134:#555a65;
---palette-135:#737985;
---palette-136:#969ca6;
---palette-137:#e2e4e9;
---palette-138:#9aa0aa;
---palette-139:#eff0f3;
---palette-140:#656c78;
---palette-141:#a0a6b0;
---palette-142:#e0e3e8;
---palette-143:#858c99;
---palette-144:#e0e2e7;
---palette-145:#e2e3e7;
---palette-146:#626975;
---palette-147:#e1e3e8;
---palette-148:#9097a3;
---palette-149:#939ba7;
---palette-150:#858e9b;
---palette-151:#9099a5;
---palette-152:#e3e5ea;
---palette-153:#656d79;
---palette-154:#a0a7b1;
---palette-155:#dfe3e9;
---palette-156:#555e6c;
---palette-157:#efd8cb;
---palette-158:#fcf5ee;
---palette-159:#a47855;
---palette-160:#dfe2e7;
---palette-161:#343840;
---palette-162:#0002;
---palette-163:#20252c55;
---palette-164:#eceef1;
---palette-165:#8a929f;
---palette-166:#9a8270;
---palette-167:#7d8694;
---palette-168:#f6f7f9;
---palette-169:#939aa6;
---palette-170:#969eaa;
---palette-171:#737d8b;
---palette-172:#f8f5ef;
---palette-173:#9b886b;
---palette-174:#e9ecf1;
---palette-175:#dfe4ec;
---palette-176:#949eac;
---palette-177:#eef4ee;
---palette-178:#7d9a7e;
---palette-179:#e2eae1;
---palette-180:#8f99a7;
---palette-181:#8b9b85;
---palette-182:#343943;
---palette-183:#696e77;
---palette-184:#fffaf7;
---palette-185:#687e65;
---palette-186:#f7f7f8;
---palette-187:#508575;
---palette-188:#ddd;
---palette-189:#dddfe4;
---palette-190:#fafbfc;
---palette-191:#d9dce3;
---palette-192:#e5e7eb;
---palette-193:#697586;
+:root {
+  color-scheme: light;
+  --surface: #fff;
+  --foreground: #30343b;
+  --border: #dde1e7;
+  --paper: #fff;
+  --ink: #000;
+  --palette-0: #292a2d;
+  --palette-1: #fff;
+  --palette-2: #777b83;
+  --palette-3: #e9e9ec;
+  --palette-4: #b65431;
+  --palette-5: #d7b2a2;
+  --palette-6: #f8f8f9;
+  --palette-7: #37383d;
+  --palette-8: #93969b;
+  --palette-9: #e4e4e7;
+  --palette-10: #858990;
+  --palette-11: #ece8e3;
+  --palette-12: #e2ddd7;
+  --palette-13: #777064;
+  --palette-14: #292a2e;
+  --palette-15: #414249;
+  --palette-16: #a6a7af;
+  --palette-17: #747780;
+  --palette-18: #eeeef0;
+  --palette-19: #eeece9;
+  --palette-20: #3a3835;
+  --palette-21: #ac6345;
+  --palette-22: #95908b;
+  --palette-23: #999ba2;
+  --palette-24: #848790;
+  --palette-25: #eaeaec;
+  --palette-26: #35363b;
+  --palette-27: #9699a0;
+  --palette-28: #71747b;
+  --palette-29: #ededf0;
+  --palette-30: #d1bbab;
+  --palette-31: #8d6952;
+  --palette-32: #b2becd;
+  --palette-33: #596e8a;
+  --palette-34: #b7c1b2;
+  --palette-35: #60735a;
+  --palette-36: #c1b4c6;
+  --palette-37: #7c6287;
+  --palette-38: #90949a;
+  --palette-39: #bfc1c7;
+  --palette-40: #6b9175;
+  --palette-41: #c77663;
+  --palette-42: #b59454;
+  --palette-43: #e5e5e8;
+  --palette-44: #9599a1;
+  --palette-45: #eee2d9;
+  --palette-46: #e1d2c6;
+  --palette-47: #846049;
+  --palette-48: #989ba1;
+  --palette-49: #555860;
+  --palette-50: #80858b;
+  --palette-51: #92959c;
+  --palette-52: #83878e;
+  --palette-53: #303137;
+  --palette-54: #484950;
+  --palette-55: #60636b;
+  --palette-56: #dedfe3;
+  --palette-57: #00000004;
+  --palette-58: #fafafa;
+  --palette-59: #8b8e95;
+  --palette-60: #a4a7af;
+  --palette-61: #20202504;
+  --palette-62: #777c85;
+  --palette-63: #42454c;
+  --palette-64: #a1a4aa;
+  --palette-65: #b6a394;
+  --palette-66: #b6a39415;
+  --palette-67: #9a9da5;
+  --palette-68: #e4e6e8;
+  --palette-69: #729077;
+  --palette-70: #7292b9;
+  --palette-71: #8175b2;
+  --palette-72: #efeff1;
+  --palette-73: #fcfcfc;
+  --palette-74: #999da5;
+  --palette-75: #7e8289;
+  --palette-76: #88857e;
+  --palette-77: #9b644b;
+  --palette-78: #82858d;
+  --palette-79: #e6e7ea;
+  --palette-80: #f6f6f7;
+  --palette-81: #c9cace;
+  --palette-82: #aaadb4;
+  --palette-83: #92969d;
+  --palette-84: #898d95;
+  --palette-85: #33343a;
+  --palette-86: #e2e3e6;
+  --palette-87: #b7b9c0;
+  --palette-88: #fdfdfd;
+  --palette-89: #acaeb5;
+  --palette-90: #f2e9e1;
+  --palette-91: #edf0f5;
+  --palette-92: #edf2ea;
+  --palette-93: #f1eaf5;
+  --palette-94: #90949c;
+  --palette-95: #f0f0f2;
+  --palette-96: #a48b77;
+  --palette-97: #92969e;
+  --palette-98: #dadce0;
+  --palette-99: #fcfcfd;
+  --palette-100: #f7f7f9;
+  --palette-101: #656972;
+  --palette-102: #969aa2;
+  --palette-103: #e6e7eb;
+  --palette-104: #a0a4ac;
+  --palette-105: #f5f5f6;
+  --palette-106: #e9e9ed;
+  --palette-107: #a7abb2;
+  --palette-108: #838995;
+  --palette-109: #f1f2f4;
+  --palette-110: #edf3ef;
+  --palette-111: #63806c;
+  --palette-112: #a28753;
+  --palette-113: #f8f3e8;
+  --palette-114: #faefeb;
+  --palette-115: #b5755f;
+  --palette-116: #eef2f8;
+  --palette-117: #6d86ae;
+  --palette-118: #9da2ac;
+  --palette-119: #777d87;
+  --palette-120: #9ca0a9;
+  --palette-121: #979aa2;
+  --palette-122: #969ba5;
+  --palette-123: #adb1b9;
+  --palette-124: #858b94;
+  --palette-125: #a3a8b2;
+  --palette-126: #faf8f5;
+  --palette-127: #eee9e2;
+  --palette-128: #ab8f77;
+  --palette-129: #776d60;
+  --palette-130: #a49b90;
+  --palette-131: #9398a1;
+  --palette-132: #dedfe4;
+  --palette-133: #959ba5;
+  --palette-134: #555a65;
+  --palette-135: #737985;
+  --palette-136: #969ca6;
+  --palette-137: #e2e4e9;
+  --palette-138: #9aa0aa;
+  --palette-139: #eff0f3;
+  --palette-140: #656c78;
+  --palette-141: #a0a6b0;
+  --palette-142: #e0e3e8;
+  --palette-143: #858c99;
+  --palette-144: #e0e2e7;
+  --palette-145: #e2e3e7;
+  --palette-146: #626975;
+  --palette-147: #e1e3e8;
+  --palette-148: #9097a3;
+  --palette-149: #939ba7;
+  --palette-150: #858e9b;
+  --palette-151: #9099a5;
+  --palette-152: #e3e5ea;
+  --palette-153: #656d79;
+  --palette-154: #a0a7b1;
+  --palette-155: #dfe3e9;
+  --palette-156: #555e6c;
+  --palette-157: #efd8cb;
+  --palette-158: #fcf5ee;
+  --palette-159: #a47855;
+  --palette-160: #dfe2e7;
+  --palette-161: #343840;
+  --palette-162: #0002;
+  --palette-163: #20252c55;
+  --palette-164: #eceef1;
+  --palette-165: #8a929f;
+  --palette-166: #9a8270;
+  --palette-167: #7d8694;
+  --palette-168: #f6f7f9;
+  --palette-169: #939aa6;
+  --palette-170: #969eaa;
+  --palette-171: #737d8b;
+  --palette-172: #f8f5ef;
+  --palette-173: #9b886b;
+  --palette-174: #e9ecf1;
+  --palette-175: #dfe4ec;
+  --palette-176: #949eac;
+  --palette-177: #eef4ee;
+  --palette-178: #7d9a7e;
+  --palette-179: #e2eae1;
+  --palette-180: #8f99a7;
+  --palette-181: #8b9b85;
+  --palette-182: #343943;
+  --palette-183: #696e77;
+  --palette-184: #fffaf7;
+  --palette-185: #687e65;
+  --palette-186: #f7f7f8;
+  --palette-187: #508575;
+  --palette-188: #ddd;
+  --palette-189: #dddfe4;
+  --palette-190: #fafbfc;
+  --palette-191: #d9dce3;
+  --palette-192: #e5e7eb;
+  --palette-193: #697586;
 }
-:root[data-theme="dark"] { color-scheme:dark; --surface:#11141a; --foreground:#edf1f7; --border:#303641; --paper:#fff; --ink:#101319;
---palette-0:#edf1f7;
---palette-1:#181b22;
---palette-2:#b4bdcb;
---palette-3:#2a303a;
---palette-4:#dfa383;
---palette-5:#dfa383;
---palette-6:#15181e;
---palette-7:#b4bdcb;
---palette-8:#b4bdcb;
---palette-9:#303641;
---palette-10:#b4bdcb;
---palette-11:#1d2129;
---palette-12:#303641;
---palette-13:#b4bdcb;
---palette-14:#1d2129;
---palette-15:#1d2129;
---palette-16:#b4bdcb;
---palette-17:#b4bdcb;
---palette-18:#1d2129;
---palette-19:#1d2129;
---palette-20:#b4bdcb;
---palette-21:#b4bdcb;
---palette-22:#b4bdcb;
---palette-23:#b4bdcb;
---palette-24:#b4bdcb;
---palette-25:#1d2129;
---palette-26:#b4bdcb;
---palette-27:#b4bdcb;
---palette-28:#b4bdcb;
---palette-29:#1d2129;
---palette-30:#1d2129;
---palette-31:#b4bdcb;
---palette-32:#1d2129;
---palette-33:#b4bdcb;
---palette-34:#1d2129;
---palette-35:#b4bdcb;
---palette-36:#1d2129;
---palette-37:#b4bdcb;
---palette-38:#b4bdcb;
---palette-39:#1d2129;
---palette-40:#1d2129;
---palette-41:#1d2129;
---palette-42:#1d2129;
---palette-43:#303641;
---palette-44:#b4bdcb;
---palette-45:#1d2129;
---palette-46:#303641;
---palette-47:#b4bdcb;
---palette-48:#b4bdcb;
---palette-49:#b4bdcb;
---palette-50:#b4bdcb;
---palette-51:#b4bdcb;
---palette-52:#b4bdcb;
---palette-53:#303641;
---palette-54:#1d2129;
---palette-55:#b4bdcb;
---palette-56:#303641;
---palette-57:#aeb7c5;
---palette-58:#1d2129;
---palette-59:#b4bdcb;
---palette-60:#b4bdcb;
---palette-61:#aeb7c5;
---palette-62:#b4bdcb;
---palette-63:#b4bdcb;
---palette-64:#b4bdcb;
---palette-65:#303641;
---palette-66:#aeb7c5;
---palette-67:#b4bdcb;
---palette-68:#303641;
---palette-69:#b4bdcb;
---palette-70:#b4bdcb;
---palette-71:#b4bdcb;
---palette-72:#303641;
---palette-73:#1d2129;
---palette-74:#b4bdcb;
---palette-75:#b4bdcb;
---palette-76:#b4bdcb;
---palette-77:#b4bdcb;
---palette-78:#b4bdcb;
---palette-79:#303641;
---palette-80:#1d2129;
---palette-81:#303641;
---palette-82:#b4bdcb;
---palette-83:#b4bdcb;
---palette-84:#b4bdcb;
---palette-85:#b4bdcb;
---palette-86:#303641;
---palette-87:#303641;
---palette-88:#1d2129;
---palette-89:#b4bdcb;
---palette-90:#1d2129;
---palette-91:#1d2129;
---palette-92:#1d2129;
---palette-93:#1d2129;
---palette-94:#b4bdcb;
---palette-95:#1d2129;
---palette-96:#1d2129;
---palette-97:#b4bdcb;
---palette-98:#303641;
---palette-99:#1d2129;
---palette-100:#1d2129;
---palette-101:#b4bdcb;
---palette-102:#b4bdcb;
---palette-103:#303641;
---palette-104:#b4bdcb;
---palette-105:#1d2129;
---palette-106:#303641;
---palette-107:#b4bdcb;
---palette-108:#b4bdcb;
---palette-109:#1d2129;
---palette-110:#1d2129;
---palette-111:#b4bdcb;
---palette-112:#b4bdcb;
---palette-113:#1d2129;
---palette-114:#1d2129;
---palette-115:#b4bdcb;
---palette-116:#1d2129;
---palette-117:#b4bdcb;
---palette-118:#b4bdcb;
---palette-119:#b4bdcb;
---palette-120:#b4bdcb;
---palette-121:#b4bdcb;
---palette-122:#b4bdcb;
---palette-123:#b4bdcb;
---palette-124:#b4bdcb;
---palette-125:#b4bdcb;
---palette-126:#1d2129;
---palette-127:#303641;
---palette-128:#b4bdcb;
---palette-129:#b4bdcb;
---palette-130:#b4bdcb;
---palette-131:#b4bdcb;
---palette-132:#303641;
---palette-133:#b4bdcb;
---palette-134:#b4bdcb;
---palette-135:#b4bdcb;
---palette-136:#b4bdcb;
---palette-137:#303641;
---palette-138:#b4bdcb;
---palette-139:#303641;
---palette-140:#b4bdcb;
---palette-141:#b4bdcb;
---palette-142:#303641;
---palette-143:#b4bdcb;
---palette-144:#303641;
---palette-145:#303641;
---palette-146:#b4bdcb;
---palette-147:#303641;
---palette-148:#b4bdcb;
---palette-149:#b4bdcb;
---palette-150:#b4bdcb;
---palette-151:#b4bdcb;
---palette-152:#303641;
---palette-153:#b4bdcb;
---palette-154:#b4bdcb;
---palette-155:#303641;
---palette-156:#b4bdcb;
---palette-157:#303641;
---palette-158:#1d2129;
---palette-159:#b4bdcb;
---palette-160:#303641;
---palette-161:#edf1f7;
---palette-162:#aeb7c5;
---palette-163:#1d2129;
---palette-164:#303641;
---palette-165:#b4bdcb;
---palette-166:#b4bdcb;
---palette-167:#b4bdcb;
---palette-168:#1d2129;
---palette-169:#b4bdcb;
---palette-170:#b4bdcb;
---palette-171:#b4bdcb;
---palette-172:#1d2129;
---palette-173:#b4bdcb;
---palette-174:#303641;
---palette-175:#303641;
---palette-176:#b4bdcb;
---palette-177:#1d2129;
---palette-178:#b4bdcb;
---palette-179:#303641;
---palette-180:#b4bdcb;
---palette-181:#b4bdcb;
---palette-182:#1d2129;
---palette-183:#b4bdcb;
---palette-184:#1d2129;
---palette-185:#b4bdcb;
---palette-186:#1d2129;
---palette-187:#b4bdcb;
---palette-188:#303641;
---palette-189:#303641;
---palette-190:#1d2129;
---palette-191:#303641;
---palette-192:#303641;
---palette-193:#b4bdcb;
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface: #11141a;
+  --foreground: #edf1f7;
+  --border: #303641;
+  --paper: #fff;
+  --ink: #101319;
+  --palette-0: #edf1f7;
+  --palette-1: #181b22;
+  --palette-2: #b4bdcb;
+  --palette-3: #2a303a;
+  --palette-4: #dfa383;
+  --palette-5: #dfa383;
+  --palette-6: #15181e;
+  --palette-7: #b4bdcb;
+  --palette-8: #b4bdcb;
+  --palette-9: #303641;
+  --palette-10: #b4bdcb;
+  --palette-11: #1d2129;
+  --palette-12: #303641;
+  --palette-13: #b4bdcb;
+  --palette-14: #1d2129;
+  --palette-15: #1d2129;
+  --palette-16: #b4bdcb;
+  --palette-17: #b4bdcb;
+  --palette-18: #1d2129;
+  --palette-19: #1d2129;
+  --palette-20: #b4bdcb;
+  --palette-21: #b4bdcb;
+  --palette-22: #b4bdcb;
+  --palette-23: #b4bdcb;
+  --palette-24: #b4bdcb;
+  --palette-25: #1d2129;
+  --palette-26: #b4bdcb;
+  --palette-27: #b4bdcb;
+  --palette-28: #b4bdcb;
+  --palette-29: #1d2129;
+  --palette-30: #1d2129;
+  --palette-31: #b4bdcb;
+  --palette-32: #1d2129;
+  --palette-33: #b4bdcb;
+  --palette-34: #1d2129;
+  --palette-35: #b4bdcb;
+  --palette-36: #1d2129;
+  --palette-37: #b4bdcb;
+  --palette-38: #b4bdcb;
+  --palette-39: #1d2129;
+  --palette-40: #1d2129;
+  --palette-41: #1d2129;
+  --palette-42: #1d2129;
+  --palette-43: #303641;
+  --palette-44: #b4bdcb;
+  --palette-45: #1d2129;
+  --palette-46: #303641;
+  --palette-47: #b4bdcb;
+  --palette-48: #b4bdcb;
+  --palette-49: #b4bdcb;
+  --palette-50: #b4bdcb;
+  --palette-51: #b4bdcb;
+  --palette-52: #b4bdcb;
+  --palette-53: #303641;
+  --palette-54: #1d2129;
+  --palette-55: #b4bdcb;
+  --palette-56: #303641;
+  --palette-57: #aeb7c5;
+  --palette-58: #1d2129;
+  --palette-59: #b4bdcb;
+  --palette-60: #b4bdcb;
+  --palette-61: #aeb7c5;
+  --palette-62: #b4bdcb;
+  --palette-63: #b4bdcb;
+  --palette-64: #b4bdcb;
+  --palette-65: #303641;
+  --palette-66: #aeb7c5;
+  --palette-67: #b4bdcb;
+  --palette-68: #303641;
+  --palette-69: #b4bdcb;
+  --palette-70: #b4bdcb;
+  --palette-71: #b4bdcb;
+  --palette-72: #303641;
+  --palette-73: #1d2129;
+  --palette-74: #b4bdcb;
+  --palette-75: #b4bdcb;
+  --palette-76: #b4bdcb;
+  --palette-77: #b4bdcb;
+  --palette-78: #b4bdcb;
+  --palette-79: #303641;
+  --palette-80: #1d2129;
+  --palette-81: #303641;
+  --palette-82: #b4bdcb;
+  --palette-83: #b4bdcb;
+  --palette-84: #b4bdcb;
+  --palette-85: #b4bdcb;
+  --palette-86: #303641;
+  --palette-87: #303641;
+  --palette-88: #1d2129;
+  --palette-89: #b4bdcb;
+  --palette-90: #1d2129;
+  --palette-91: #1d2129;
+  --palette-92: #1d2129;
+  --palette-93: #1d2129;
+  --palette-94: #b4bdcb;
+  --palette-95: #1d2129;
+  --palette-96: #1d2129;
+  --palette-97: #b4bdcb;
+  --palette-98: #303641;
+  --palette-99: #1d2129;
+  --palette-100: #1d2129;
+  --palette-101: #b4bdcb;
+  --palette-102: #b4bdcb;
+  --palette-103: #303641;
+  --palette-104: #b4bdcb;
+  --palette-105: #1d2129;
+  --palette-106: #303641;
+  --palette-107: #b4bdcb;
+  --palette-108: #b4bdcb;
+  --palette-109: #1d2129;
+  --palette-110: #1d2129;
+  --palette-111: #b4bdcb;
+  --palette-112: #b4bdcb;
+  --palette-113: #1d2129;
+  --palette-114: #1d2129;
+  --palette-115: #b4bdcb;
+  --palette-116: #1d2129;
+  --palette-117: #b4bdcb;
+  --palette-118: #b4bdcb;
+  --palette-119: #b4bdcb;
+  --palette-120: #b4bdcb;
+  --palette-121: #b4bdcb;
+  --palette-122: #b4bdcb;
+  --palette-123: #b4bdcb;
+  --palette-124: #b4bdcb;
+  --palette-125: #b4bdcb;
+  --palette-126: #1d2129;
+  --palette-127: #303641;
+  --palette-128: #b4bdcb;
+  --palette-129: #b4bdcb;
+  --palette-130: #b4bdcb;
+  --palette-131: #b4bdcb;
+  --palette-132: #303641;
+  --palette-133: #b4bdcb;
+  --palette-134: #b4bdcb;
+  --palette-135: #b4bdcb;
+  --palette-136: #b4bdcb;
+  --palette-137: #303641;
+  --palette-138: #b4bdcb;
+  --palette-139: #303641;
+  --palette-140: #b4bdcb;
+  --palette-141: #b4bdcb;
+  --palette-142: #303641;
+  --palette-143: #b4bdcb;
+  --palette-144: #303641;
+  --palette-145: #303641;
+  --palette-146: #b4bdcb;
+  --palette-147: #303641;
+  --palette-148: #b4bdcb;
+  --palette-149: #b4bdcb;
+  --palette-150: #b4bdcb;
+  --palette-151: #b4bdcb;
+  --palette-152: #303641;
+  --palette-153: #b4bdcb;
+  --palette-154: #b4bdcb;
+  --palette-155: #303641;
+  --palette-156: #b4bdcb;
+  --palette-157: #303641;
+  --palette-158: #1d2129;
+  --palette-159: #b4bdcb;
+  --palette-160: #303641;
+  --palette-161: #edf1f7;
+  --palette-162: #aeb7c5;
+  --palette-163: #1d2129;
+  --palette-164: #303641;
+  --palette-165: #b4bdcb;
+  --palette-166: #b4bdcb;
+  --palette-167: #b4bdcb;
+  --palette-168: #1d2129;
+  --palette-169: #b4bdcb;
+  --palette-170: #b4bdcb;
+  --palette-171: #b4bdcb;
+  --palette-172: #1d2129;
+  --palette-173: #b4bdcb;
+  --palette-174: #303641;
+  --palette-175: #303641;
+  --palette-176: #b4bdcb;
+  --palette-177: #1d2129;
+  --palette-178: #b4bdcb;
+  --palette-179: #303641;
+  --palette-180: #b4bdcb;
+  --palette-181: #b4bdcb;
+  --palette-182: #1d2129;
+  --palette-183: #b4bdcb;
+  --palette-184: #1d2129;
+  --palette-185: #b4bdcb;
+  --palette-186: #1d2129;
+  --palette-187: #b4bdcb;
+  --palette-188: #303641;
+  --palette-189: #303641;
+  --palette-190: #1d2129;
+  --palette-191: #303641;
+  --palette-192: #303641;
+  --palette-193: #b4bdcb;
 }
 
-body { background:var(--surface); color:var(--foreground) }
-input,select,textarea { color:var(--foreground); background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:10px; max-width:100%; }
-select { display:block; margin-top:8px; }
-.connection-tabs { display:flex; gap:10px; margin-bottom:24px; }
-.account-columns { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:24px; }
-.account-columns section,.meeting-panel,.reminders-panel { border:1px solid var(--border); border-radius:8px; padding:18px; margin:14px 0; }
-.account-columns h2,.reminders-panel h2 { font-size:16px; }
-.account-columns label { display:block; margin:12px 0; }
-.account-columns input:not([type=checkbox]) { display:block; width:100%; margin-top:6px; }
-.account-columns fieldset { border:1px solid var(--border); max-height:230px; overflow:auto; margin:16px 0; }
-.account-row { display:flex; gap:12px; align-items:center; border-bottom:1px solid var(--border); padding:14px 0; overflow-wrap:anywhere; }
-.account-row div { flex:1; min-width:0; }
-.account-row button { background:var(--surface); color:var(--foreground); padding:8px; border:1px solid var(--border); border-radius:6px; }
-.account-row p { margin:6px 0; font-size:12px; }
-.meeting-panel ul { padding-left:20px; font-size:12px; }
-.settings-section select { width:100%; }
-@media(max-width:700px) { .account-columns {grid-template-columns:1fr;} }
+body {
+  background: var(--surface);
+  color: var(--foreground);
+}
+input,
+select,
+textarea {
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  max-width: 100%;
+}
+select {
+  display: block;
+  margin-top: 8px;
+}
+.connection-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.account-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 24px;
+}
+.account-columns section,
+.meeting-panel,
+.reminders-panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+  margin: 14px 0;
+}
+.account-columns h2,
+.reminders-panel h2 {
+  font-size: 16px;
+}
+.account-columns label {
+  display: block;
+  margin: 12px 0;
+}
+.account-columns input:not([type='checkbox']) {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+}
+.account-columns fieldset {
+  border: 1px solid var(--border);
+  max-height: 230px;
+  overflow: auto;
+  margin: 16px 0;
+}
+.account-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+  overflow-wrap: anywhere;
+}
+.account-row div {
+  flex: 1;
+  min-width: 0;
+}
+.account-row button {
+  background: var(--surface);
+  color: var(--foreground);
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.account-row p {
+  margin: 6px 0;
+  font-size: 12px;
+}
+.meeting-panel ul {
+  padding-left: 20px;
+  font-size: 12px;
+}
+.settings-section select {
+  width: 100%;
+}
+@media (max-width: 700px) {
+  .account-columns {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Semantic surfaces keep dark mode consistent across existing and new screens. */
-:root { --surface-raised:#fff; --surface-input:#fff; --surface-hover:#f3f4f6; --text-secondary:#687180; --focus:#b65431; }
-:root[data-theme="dark"] { --surface-raised:#191d25; --surface-input:#12161d; --surface-hover:#242b36; --text-secondary:#a9b4c4; --focus:#e2ad8f; }
-:root[data-theme="dark"] .sidebar { background:#15181f; }
-:root[data-theme="dark"] .topbar { background:var(--surface); }
-:root[data-theme="dark"] :is(.composer,.project-card,.connection-card,.ai-connection,.settings-panel,.task-panel,.dialog,.account-columns>section,.meeting-panel,.reminders-panel) { background:var(--surface-raised); border-color:var(--border); }
-:root[data-theme="dark"] :is(h1,h2,h3,h4,strong,.brand,.connected-list strong,.nav-link.active) { color:var(--foreground); }
-:root[data-theme="dark"] :is(.nav-link,.field-label,.settings-panel p,.connection-card>p,.workflow-step p,.context-description,.project-card p) { color:var(--text-secondary); }
-:root[data-theme="dark"] :is(input:not([type=checkbox]),select,textarea,.settings-panel input) { background:var(--surface-input); color:var(--foreground); border-color:var(--border); }
-:root[data-theme="dark"] .composer textarea { background:transparent; }
-:root[data-theme="dark"] :is(.composer-options,.composer-note,.workflow-notice,.project-empty,.connection-detail>p.detail-footnote) { background:#202630; color:var(--text-secondary); }
-:root[data-theme="dark"] :is(.button.primary,.new-work) { background:#e2e8f0; color:#17202d; border:1px solid #e2e8f0; }
-:root[data-theme="dark"] :is(.button.primary,.new-work):hover { background:#fff; color:#101722; }
-:root[data-theme="dark"] :is(.button.secondary,.workspace-switch,.service-icon) { background:var(--surface-raised); color:var(--foreground); border-color:var(--border); }
-:root[data-theme="dark"] :is(.nav-link.active,.nav-link:hover,.button.secondary:hover,.activity-row:hover,.member-option:hover) { background:var(--surface-hover); }
-:root[data-theme="dark"] a { color:#a9c9ff; }
-:root[data-theme="dark"] .status.completed { background:#163a30; color:#9ae1bf; }
-:root[data-theme="dark"] .status.planned { background:#3b3023; color:#edc78d; }
-:root[data-theme="dark"] :is(.status.failed,.banner.error) { background:#38252b; color:#f4b4b5; border-color:#65414a; }
-:root[data-theme="dark"] :is(.status.running,.status.queued) { background:#23354c; color:#aecdfa; }
-:root[data-theme="dark"] .toast { background:#e2e8f0; color:#17202d; }
-:root[data-theme="dark"] .dialog::backdrop { background:#06090fb3; }
-:root[data-theme="dark"] .service-icon.drive { color:#9ac7ad; }
-:root[data-theme="dark"] .service-icon.calendar { color:#9bbdf3; }
-:root[data-theme="dark"] :is(.service-icon.discord,.service-icon.gmail,.service-icon.docs) { color:#bcb0f0; }
-input::placeholder,textarea::placeholder { color:var(--text-secondary); opacity:.8; }
-select:focus-visible,input:focus-visible,button:focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
-.preferences-actions { display:flex; gap:16px; align-items:center; margin:20px 0; }
-.preferences-actions span { color:var(--text-secondary); font-size:12px; }
-.settings-section:first-child { border-top:0; margin-top:0; padding-top:0; }
-.settings-section select { cursor:pointer; min-height:44px; }
-.account-columns { align-items:start; gap:24px; }
-.account-columns>section { padding:24px; border-radius:12px; }
-.account-columns form label { font-size:13px; }
-.account-columns .member-picker { min-width:0; padding:16px; border:1px solid var(--border); border-radius:8px; margin:20px 0; max-height:none; overflow:visible; }
-.member-picker legend { padding:0 6px; font-size:13px; font-weight:600; }
-.member-picker .member-help { color:var(--text-secondary); line-height:1.7; font-size:12px; margin:12px 0; }
-.member-list { max-height:240px; overflow:auto; }
-.account-columns label.member-option { display:flex; align-items:center; gap:12px; padding:10px; margin:4px 0; border-radius:6px; cursor:pointer; }
-.member-option input[type=checkbox] { width:17px; height:17px; padding:0; margin:0; }
-.member-option span { min-width:0; }
-.member-option strong { display:block; font-size:13px; font-weight:500; }
-.member-option small { margin-top:4px; color:var(--text-secondary); font-size:12px; overflow-wrap:anywhere; }
-.member-count { display:block; color:var(--text-secondary); font-size:12px; margin-top:12px; }
-@media(max-width:700px) { .account-columns>section { padding:18px; } .preferences-actions { flex-wrap:wrap; } }
+:root {
+  --surface-raised: #fff;
+  --surface-input: #fff;
+  --surface-hover: #f3f4f6;
+  --text-secondary: #687180;
+  --focus: #b65431;
+}
+:root[data-theme='dark'] {
+  --surface-raised: #191d25;
+  --surface-input: #12161d;
+  --surface-hover: #242b36;
+  --text-secondary: #a9b4c4;
+  --focus: #e2ad8f;
+}
+:root[data-theme='dark'] .sidebar {
+  background: #15181f;
+}
+:root[data-theme='dark'] .topbar {
+  background: var(--surface);
+}
+:root[data-theme='dark']
+  :is(
+    .composer,
+    .project-card,
+    .connection-card,
+    .ai-connection,
+    .settings-panel,
+    .task-panel,
+    .dialog,
+    .account-columns > section,
+    .meeting-panel,
+    .reminders-panel
+  ) {
+  background: var(--surface-raised);
+  border-color: var(--border);
+}
+:root[data-theme='dark']
+  :is(h1, h2, h3, h4, strong, .brand, .connected-list strong, .nav-link.active) {
+  color: var(--foreground);
+}
+:root[data-theme='dark']
+  :is(
+    .nav-link,
+    .field-label,
+    .settings-panel p,
+    .connection-card > p,
+    .workflow-step p,
+    .context-description,
+    .project-card p
+  ) {
+  color: var(--text-secondary);
+}
+:root[data-theme='dark']
+  :is(input:not([type='checkbox']), select, textarea, .settings-panel input) {
+  background: var(--surface-input);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+:root[data-theme='dark'] .composer textarea {
+  background: transparent;
+}
+:root[data-theme='dark']
+  :is(
+    .composer-options,
+    .composer-note,
+    .workflow-notice,
+    .project-empty,
+    .connection-detail > p.detail-footnote
+  ) {
+  background: #202630;
+  color: var(--text-secondary);
+}
+:root[data-theme='dark'] :is(.button.primary, .new-work) {
+  background: #e2e8f0;
+  color: #17202d;
+  border: 1px solid #e2e8f0;
+}
+:root[data-theme='dark'] :is(.button.primary, .new-work):hover {
+  background: #fff;
+  color: #101722;
+}
+:root[data-theme='dark'] :is(.button.secondary, .workspace-switch, .service-icon) {
+  background: var(--surface-raised);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+:root[data-theme='dark']
+  :is(
+    .nav-link.active,
+    .nav-link:hover,
+    .button.secondary:hover,
+    .activity-row:hover,
+    .member-option:hover
+  ) {
+  background: var(--surface-hover);
+}
+:root[data-theme='dark'] a {
+  color: #a9c9ff;
+}
+:root[data-theme='dark'] .status.completed {
+  background: #163a30;
+  color: #9ae1bf;
+}
+:root[data-theme='dark'] .status.planned {
+  background: #3b3023;
+  color: #edc78d;
+}
+:root[data-theme='dark'] :is(.status.failed, .banner.error) {
+  background: #38252b;
+  color: #f4b4b5;
+  border-color: #65414a;
+}
+:root[data-theme='dark'] :is(.status.running, .status.queued) {
+  background: #23354c;
+  color: #aecdfa;
+}
+:root[data-theme='dark'] .toast {
+  background: #e2e8f0;
+  color: #17202d;
+}
+:root[data-theme='dark'] .dialog::backdrop {
+  background: #06090fb3;
+}
+:root[data-theme='dark'] .service-icon.drive {
+  color: #9ac7ad;
+}
+:root[data-theme='dark'] .service-icon.calendar {
+  color: #9bbdf3;
+}
+:root[data-theme='dark'] :is(.service-icon.discord, .service-icon.gmail, .service-icon.docs) {
+  color: #bcb0f0;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+select:focus-visible,
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.preferences-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 20px 0;
+}
+.preferences-actions span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.settings-section:first-child {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+.settings-section select {
+  cursor: pointer;
+  min-height: 44px;
+}
+.account-columns {
+  align-items: start;
+  gap: 24px;
+}
+.account-columns > section {
+  padding: 24px;
+  border-radius: 12px;
+}
+.account-columns form label {
+  font-size: 13px;
+}
+.account-columns .member-picker {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 20px 0;
+  max-height: none;
+  overflow: visible;
+}
+.member-picker legend {
+  padding: 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.member-picker .member-help {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 12px;
+  margin: 12px 0;
+}
+.member-list {
+  max-height: 240px;
+  overflow: auto;
+}
+.account-columns label.member-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  margin: 4px 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.member-option input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  margin: 0;
+}
+.member-option span {
+  min-width: 0;
+}
+.member-option strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.member-option small {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.member-count {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 12px;
+}
+@media (max-width: 700px) {
+  .account-columns > section {
+    padding: 18px;
+  }
+  .preferences-actions {
+    flex-wrap: wrap;
+  }
+}
 
 /* Keep account alerts inside the content column, clear of the fixed navigation. */
-.preferences-banner { margin-left:234px; padding:16px 40px 0; }
-.preferences-banner .banner { margin:0; overflow-wrap:anywhere; }
-@media(max-width:1150px) and (min-width:701px) { .preferences-banner { margin-left:210px; padding-inline:25px; } }
-@media(max-width:700px) { .preferences-banner { margin-left:0; padding:12px 18px 0; } }
+.preferences-banner {
+  margin-left: 234px;
+  padding: 16px 40px 0;
+}
+.preferences-banner .banner {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1150px) and (min-width: 701px) {
+  .preferences-banner {
+    margin-left: 210px;
+    padding-inline: 25px;
+  }
+}
+@media (max-width: 700px) {
+  .preferences-banner {
+    margin-left: 0;
+    padding: 12px 18px 0;
+  }
+}
